@@ -1,5 +1,3 @@
-library("stringr")
-
 re = "^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$"
 
 formatt_types <- list(
@@ -81,6 +79,4 @@ prettify <- function(x, locale = NULL) {
   } else {
     ""
   }
-
-
 }
