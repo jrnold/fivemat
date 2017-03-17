@@ -10,7 +10,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
-Import:
+Imports:
   assertthat,
   dplyr,
   stringr
