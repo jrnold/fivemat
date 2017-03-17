@@ -1,25 +1,29 @@
-library("stringr")
-
 re = "^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$"
 
-formatt_types <- list(
+to_fixed <- function(x, p) sprintf(paste0("%e.", p), x)
+
+to_exponential <- function(x, p)
+
+to_precision <- function(x, p)
+
+fmt_types <- list(
   "" = NULL, #formatDefault,
-  "%" = NULL, # function(x, p) { return (x * 100).toFixed(p); },
-  "b" = NULL, # function(x) { return Math.round(x).toString(2); },
-  "c" = NULL, # function(x) { return x + ""; },
-  "d" = NULL, # function(x) { return Math.round(x).toString(10); },
-  "e" = NULL, # function(x, p) { return x.toExponential(p); },
-  "f" = NULL, # function(x, p) { return x.toFixed(p); },
-  "g" = NULL, # function(x, p) { return x.toPrecision(p); },
-  "o" = NULL, # function(x) { return Math.round(x).toString(8); },
+  "%" = function(x, p) sprintf(paste0("%f.", p), x * 100),
+  "b" = function(x) as.character(R.utils::intToBin(round(x))),
+  "c" = as.character,
+  "d" = function(x) as.character(round(x)),
+  "e" = function(x, p) sprintf(paste0("%e.", p), x),
+  "f" = function(x, p) sprintf(paste0("%d.", p), x),
+  "g" = function(x, p) sprintf(paste0("%g.", p), x),
+  "o" = function(x) format(as.octmode(x)),
   "p" = NULL, # function(x, p) { return formatRounded(x * 100, p); },
   "r" = NULL, # formatRounded,
   "s" = NULL, # formatPrefixAuto,
-  "X" = NULL, # function(x) { return Math.round(x).toString(16).toUpperCase(); },
-  "x" = NULL # function(x) { return Math.round(x).toString(16); }
+  "X" = function(x) format(as.hexmode(round(x)), upper.case = TRUE),
+  "x" = function(x) format(as.hexmode(round(x)), upper.case = FALSE)
 )
 
-formatt_spec <- function(x) {
+fmt_spec <- function(x) {
   match <- str_match(x)
 
   res <- list(
@@ -28,8 +32,8 @@ formatt_spec <- function(x) {
     sign = match[3] %||% "-",
     symbol = match[4] %||% "",
     zero = !is.na(match[5]),
-    width = match[6] && +match[6],
-    comma = !!match[7],
+    width = as.numeric(match[6]),
+    comma = !is.na(match[7]),
     precision = match[8], # && +match[8].slice(1),
     type = match[9] %||% ""
   )
@@ -48,10 +52,10 @@ formatt_spec <- function(x) {
     res$fill <- "0"
     res$align <- "="
   }
-  structure(res, class = "format_specifier")
+  structure(res, class = "fmt_spec")
 }
 
-print.formatt_spec(x) {
+print.fmt_spec(x) {
   mst <- paste0(x$fill,
                 x$align,
                 x$sign,
@@ -82,5 +86,36 @@ prettify <- function(x, locale = NULL) {
     ""
   }
 
+  format_type <- fmt_types[type]
 
+  maybe_suffix <- is.null(type) || type %in% c("d", "e", "f", "g", "p", "r", "s", "%")
+
+  precision <- if (is.null(precision)) {
+    if (is.null(type)) 6
+    else 12
+  } else if (type %in% c("g", "p", "r", "s")) {
+    max(1, min(21, precision))
+  } else {
+    max(0, min(20, precision))
+  }
+
+}
+
+exponent <- function(x) {
+  floor(log10(abs(x))) + (x < 0)
+}
+
+precision_fixed <- function(step) {
+  max(0, -exponent(abs(step)))
+}
+
+precision_prefix <- function(step, value) {
+  pmax(0, pmax(-8, pmin(8, floor(exponent(value) / 3))) * 3 -
+         exponent(abs(step)))
+}
+
+precision_round <- function(step, max) {
+  step <- abs(step)
+  max <- abs(max) - step
+  max(0, exponent(max) - exponent(step)) + 1
 }
