@@ -116,3 +116,39 @@ print.fmt_spec <- function(x, ...) {
                   if (is.na(x$precision)) "" else "." + max(0, x$precision),
                   if (x$type == "NULL") "" else x$type)
 }
+
+#' Format locale
+#'
+#' Create a a format locale. This object provides information on the symbols for decimal points, group (thousands) seperator, group sizes, currency symbols, and numerals.
+#'
+#' @param decimal_mark string. the decimal point mark (e.g., `"."``).
+#' @param grouping_mark string. the grouping mark (e.g., `","``).
+#' @param grouping numeric vector group sizes (e.g., c(3L)). It is recycled as needed.
+#' @param currency character vector of length two with the currency prefix and suffix (e.g., `c("$", "")`
+#' @param numerals A character vector of length ten to replace the numerals 0-9.
+#' @return  An object of class `"fmt_locale"`, which is a named list with elements: `decimal`, `thousands`, `grouping`, `currency`, and `numerals` (optional).
+#' @export
+fmt_locale <- function(decimal_mark = ".",
+                       grouping_mark = ",",
+                       grouping = 3,
+                       currency = c("", ""),
+                       numerals = NULL) {
+  assert_that(is.string(decimal_mark))
+  assert_that(is.string(grouping_mark))
+  assert_that(is.numeric(grouping))
+  grouping <- as.integer(grouping)
+  assert_that(is.character(currency) && length(currency) == 2)
+  if (!is.null(numerals)) {
+    assert_that(is.character(numerals) && length(numerals) == 10)
+  }
+  structure(
+    list(
+      decimal_mark = decimal_mark,
+      grouping_mark = grouping_mark,
+      grouping = grouping,
+      currency = currency,
+      numerals = numerals
+    ),
+    class = "fmt_locale"
+  )
+}

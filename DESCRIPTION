@@ -13,5 +13,7 @@ Suggests: testthat
 Imports:
   assertthat,
   dplyr,
-  stringr
+  purrr,
+  stringr,
+  stringi
 RoxygenNote: 6.0.1

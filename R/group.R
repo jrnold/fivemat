@@ -1,11 +1,13 @@
-group <- function(x, interval, comma) {
-  maxlen <- max(str_len(x))
-  intvls <- as.integer(rep(interval, ceiling(x / length(intervals))))
-  start <- c(1L, intrvls[-length(intvls)])
+
+#' @importFrom stringr str_sub str_length str_c
+#' @importFrom stringi stri_reverse
+group <- function(x, grouping, comma) {
+  intvls <- rep_len(grouping, max(str_length(x)))
+  start <- c(1L, intvls[-length(intvls)])
   end <- start + intvls - 1L
   f <- function(x, start, end) {
-    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
+    res <- purrr::keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
     res <- str_c(rev(res), collapse = comma)
   }
-  map_chr(x, f, start = start, end = end)
+  purrr::map_chr(x, f, start = start, end = end)
 }
