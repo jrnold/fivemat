@@ -1,0 +1,16 @@
+# fivemat: Better formatting for R
+
+
+
+```{r}
+fmt_format(seq(0, 1, by = 0.1), ".1f")
+
+fmt_format(0.123, ".0%")  # rounded percentage, "12%"
+fmt_format(-3.5, "($.2f", locale = "en_")  # localized fixed-point currency, "(£3.50)"
+fmt_format(42, "+20")     # space-filled and signed, "                 +42"
+fmt_format(42, ".^20")    # dot-filled and centered, ".........42........."
+fmt_format(42e6, ".2s")   # SI-prefix with two significant digits, "42M"
+fmt_format(48879, "#x")   # prefixed lowercase hexadecimal, "0xbeef"
+fmt_format(4223, ",.2r")
+```
+

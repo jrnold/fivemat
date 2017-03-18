@@ -63,11 +63,11 @@ fmt_default_locale <- function() {
 #' @export
 print.fmt_locale <- function(x, ...) {
   cat("<fmt_locale>\n")
-  cat("Grouping:  ", x$grouping, "\n")
+  cat("Grouping:       ", str_c(x$grouping, collapse = ","), "\n")
   cat("Grouping Mark:  ", x$grouping_mark, "\n")
-  cat("Decimal Mark:  ", x$decimal_mark, "\n")
-  cat("Currency: ", str_c(x$currency[1], 1, x$currency[2]), "\n")
+  cat("Decimal Mark:   ", x$decimal_mark, "\n")
+  cat("Currency:       ", str_c(x$currency[1], 1, x$currency[2]), "\n")
   if (!is.null(x$numerals)) {
-    print("Numerals: ", x$numerals, "\n")
+    cat("Numerals:      ", str_c(x$numerals, collapse = ", "), "\n")
   }
 }

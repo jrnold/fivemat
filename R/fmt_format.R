@@ -36,7 +36,22 @@ fmt_format <- function(x, spec = NULL, locale = NULL) {
     } else if (is.list(spec)) {
       spec <- invoke(fmt_spec, spec)
     } else {
-      stop("Class ", str_c(class(spec)), " for `spec` is not supported.",
+      stop("Class ", str_c(class(spec), collapse = ", "),
+           " for `spec` is not supported.",
+           call. = FALSE)
+    }
+  }
+  if (!inherits(locale, "fmt_locale")) {
+    if (is.character(locale)) {
+      locale <- fivemat::fmt_locales[[locale]]
+      if (is.null(locale)) {
+        stop("Locale `", locale, "` not found in `fmt_locales`.\n",
+             "Available locales: ", str_c(names(fmt_locales), sep = ", "),
+             call. = FALSE)
+      }
+    } else {
+      stop("Class ", str_c(class(locale), collapse = ", "),
+           " for `locale` is not supported.",
            call. = FALSE)
     }
   }
