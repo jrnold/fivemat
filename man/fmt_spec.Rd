@@ -3,26 +3,109 @@
 \name{as_fmt_spec}
 \alias{as_fmt_spec}
 \alias{fmt_spec}
-\title{Format Spec}
+\title{Format Specification}
 \usage{
-as_fmt_spec(x)
+as_fmt_spec(x = character())
 
-fmt_spec(fill = NULL, align = c(">", "<", "^", "="), sign = c("-", "+",
-  "(", " "), symbol = NULL, zero = FALSE, width = NA_integer_,
-  comma = FALSE, precision = NA_integer_, type = NULL)
+fmt_spec(fill = " ", align = c(">", "<", "^", "="), sign = c("-", "+",
+  "(", " "), symbol = NULL, zero = FALSE, width = NULL, comma = FALSE,
+  precision = NULL, type = NULL)
 }
 \arguments{
-\item{x}{An object to convert to a format spec: a string representation
-of the spec.}
+\item{x}{A string representation of the spec. See Details.}
 
-\item{fill}{A string. See details.}
+\item{fill}{A string. See Details.}
 
 \item{align}{A string. See Details.}
 
 \item{sign}{A string. See Details.}
 
 \item{symbol}{A string. See Details.}
+
+\item{zero}{A logical vector of length one. See Details.}
+
+\item{width}{An integer vector of length one. See Details.}
+
+\item{comma}{An logical vector of length one. See Details.}
+
+\item{precision}{An integer vector of length one. See Details.}
+
+\item{type}{A character vector of length one. See Details.}
+}
+\value{
+An object of class \code{"fmt_spec"}. This is a list with elements:
+\describe{
+\item{fill}{Character vector of length one. See Details.}
+\item{align}{Character vector of length one. See Details.}
+\item{sign}{Character vector of length one. See Details.}
+\item{symbol}{Character vector of length one. See Details.}
+\item{width}{Integer vector of length one. See Details.}
+\item{comma}{Logical vector of length one. See Details.}
+\item{precision}{Integer vector of length one.}
+\item{type}{Character vector of length one, or \code{NULL} if the
+            default type}
+}
 }
 \description{
-Format Spec
+Format Specification
+}
+\details{
+\code{as_fmt_spec()} returns a \code{fmt_spec} object for the given string \code{specifier}.
+The returned function takes a number as the only argument, and returns a string representing the formatted number.
+The general form of a specifier is:
+\verb{[[fill]align][sign][symbol][0][width][,][.precision][type]}
+
+The \code{fill} can be any character. The presence of a fill character is signaled by the *align* character following it, which must be one of the following:
+\itemize{
+\item{\code{>}: Forces the field to be right-aligned within the available space.}
+\item{\code{<}: Forces the field to be left-aligned within the available space.}
+\item{\code{^}: Forces the field to be centered within the available space.}
+\item{\code{=}: like \code{>}, but with any sign and symbol to the left of any padding.}
+}
+
+The \code{sign} can be:
+\itemize{
+\item{\code{"-} : nothing for positive and a minus sign for negative. (Default behavior.)}
+\item{\code{"+"} : a plus sign for positive and a minus sign for negative.}
+\code{{"("} : nothing for positive and parentheses for negative.}
+\code{{" "} (space) : a space for positive and a minus sign for negative.}
+}
+
+The \code{symbol} can be:
+\itemize{
+\item{\code{"$"}: apply currency symbols per the locale definition.}
+\item{\code{"#"}: for binary, octal, or hexadecimal notation, prefix by \code{"0b"}, \code{"0o"}, or \code{"0x"}, respectively.}
+}
+
+The \code{zero} (\code{0}) option enables zero-padding; this implicitly sets \code{fill} to \code{"0"} and \code{align} to \code{"="}.
+The \code{width} defines the minimum field width; if not specified, then the width will be determined by the content.
+The \code{comma} (\code{,}) option enables the use of a group separator, such as a comma for thousands.
+
+Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"\%"}), or the number of significant digits (\code{NULL}, "e"`, `"g"`, `"r"`, `"s"`, `"p"`).
+If the precision is not specified, it defaults to 6 for all types except \code{NULL}, which defaults to 12.
+Precision is ignored for integer formats (types \code{"b"}, \code{"o"}, \code{"d"}, \code{"x"}, \code{"X"} and \code{"c"}).
+See \code{\link{precision_fixed}} and \code{\link{precision_round}} for help picking an appropriate precision.
+
+The available \code{type} values are:
+\itemize{
+\item{ \code{"e"} - exponent notation.}
+\item{ \code{"f"} - fixed point notation.}
+\item{ \code{"g"} - either decimal or exponent notation, rounded to significant digits.}
+\item{ \code{"r"} - decimal notation, rounded to significant digits.}
+\item{ \code{"s"} - decimal notation with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
+\item{ \code{"\%"} - multiply by 100, and then decimal notation with a percent sign.}
+\item{ \code{"p"} - multiply by 100, round to significant digits, and then decimal notation with a percent sign.}
+\item{ \code{"b"} - binary notation, rounded to integer.}
+\item{ \code{"o"} - octal notation, rounded to integer.}
+\item{ \code{"d"} - decimal notation, rounded to integer.}
+\item{ \code{"x"} - hexadecimal notation, using lower-case letters, rounded to integer.}
+\item{ \code{"X"} - hexadecimal notation, using upper-case letters, rounded to integer.}
+\item{ \code{"c"} - converts the integer to the corresponding unicode character before printing.}
+\item{ \code{NULL} - like \code{"g"}, but trim insignificant trailing zeros.}
+}
+The type \code{n} is also supported as shorthand for \code{,g}.
+
+For the \code{"g"}, \code{"n"} and \code{NULL} (none) types, decimal notation is used if the resulting string would
+have \code{precision} or fewer digits; otherwise,
+an exponent notation is used.
 }

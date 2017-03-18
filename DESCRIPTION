@@ -1,11 +1,11 @@
 Package: fivemat
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Formatting Numbers for Display
 Version: 0.0.1
-Author: Jeffrey Arnold
-Maintainer: Jeffrey Arnold <jeffrey.arnold@gmail.com>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R: c(person("Jeffrey", "Arnold", email = "jeffrey.arnold@gmail.com",
+                    role = c("aut", "cre")))
+Description: Better formatting for numbers. This is an R clone of the Javascript 
+    package d3-format.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -15,5 +15,6 @@ Imports:
   dplyr,
   purrr,
   stringr,
-  stringi
+  stringi,
+  R.utils
 RoxygenNote: 6.0.1
