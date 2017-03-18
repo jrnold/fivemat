@@ -11,8 +11,6 @@ get_prefix <- function(x, p) {
   out
 }
 
-"%==%" <- function(x, y) !is_empty(x) && x %in% y
-
 #' Format numbers
 #'
 #' The function \code{fmt_new} creates a function to format numbers using
@@ -20,6 +18,13 @@ get_prefix <- function(x, p) {
 #' numbers, and is a convenience function for \code{fmt_new(...)(x)}.
 #'
 #' @param x A numeric or integer vector
+#' @param si \code{NULL} or a numeric vector with length one.
+#'   The \href{SI-prefix}{https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes}
+#'   to use \code{x}. Unlike the \code{"s"} format type, this applies the same
+#'   prefix to all values in \code{x}, rather than determining the SI-prefix
+#'   on a value by value basis. Additionally, a non-\code{NULL} \code{si} implies
+#'   a \code{"f"} format type, in which \code{precision} represents the number of
+#'   digits past the decimal point.
 #' @param spec A \code{\link{fmt_spec}} object, or a string coerced to a
 #'    \code{fmt_spec} object using \code{\link{as_fmt_spec}}, or a list of
 #'    arguments passed to \code{fmt_spec}.
@@ -27,14 +32,41 @@ get_prefix <- function(x, p) {
 #' @return \code{fmt_new} returns a function with a single argument.
 #'    \code{fmt} returns a function of the same length as \code{x} of
 #'    formatted numbers.
+#'
+#' @details
+#' The supported SI-prefixes are:
+#' \itemize{
+#' \item{\code{"y"} - yocto, \eqn{10^{-24}}}
+#' \item{\code{"z"} - zepto, \eqn{10^{-21}}}
+#' \item{\code{"a"} - atto, \eqn{10^{-18}}}
+#' \item{\code{"f"} - femto, \eqn{10^{-15}}}
+#' \item{\code{"p"} - pico, \eqn{10^{-12}}}
+#' \item{\code{"n"} - nano, \eqn{10^{-9}}}
+#' \item{\code{"µ"} - micro, \eqn{10^{-6}}}
+#' \item{\code{"m"} - milli, \eqn{10^{-3}}}
+#' \item{\code{" "} (none) - \eqn{10^0}}
+#' \item{\code{"k"} - kilo, \eqn{10^3}}
+#' \item{\code{"M"} - mega, \eqn{10^{6}}}
+#' \item{\code{"G"} - giga, \eqn{10^{9}}}
+#' \item{\code{"T"} - tera, \eqn{10^{12}}}
+#' \item{\code{"P"} - peta, \eqn{10^{15}}}
+#' \item{\code{"E"} - exa, \eqn{10^{18}}}
+#' \item{\code{"Z"} - zetta, \eqn{10^{21}}}
+#' \item{\code{"Y"} - yotta, \eqn{10^{24}}}
+#' }
+#'
 #' @export
 #' @importFrom dplyr if_else
 #' @importFrom purrr invoke %||% is_empty
 #' @importFrom stringr str_replace str_pad str_c str_match
-fmt_new <- function(spec = NULL, locale = NULL) {
+#' @examples
+#' fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
+fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
   locale <- locale %||% fmt_default_locale()
   spec <- spec %||% fmt_spec()
-
+  if (!is.null(si)) {
+    assert_that(is.number(si))
+  }
   if (!inherits(spec, "fmt_spec")) {
     if (is.character(spec)) {
       assert_that(is.string(spec))
@@ -63,6 +95,14 @@ fmt_new <- function(spec = NULL, locale = NULL) {
            " for `locale` is not supported.",
            call. = FALSE)
     }
+  }
+
+  # If predefined SI Prefix, then type is always f
+  if (!is.null(si)) {
+    spec$type <- "f"
+    si_exp <- max(-8, min(8, floor(exponent(si) / 3))) * 3
+    si_k <- 10 ^ -si_exp
+    si_prefix <- PREFIXES[8L + prefix_exponent(si_exp) %/% 3 + 1L]
   }
 
   prefix <- if (spec$symbol %==% "$") {
@@ -103,10 +143,19 @@ fmt_new <- function(spec = NULL, locale = NULL) {
     max(0L, min(20L, spec$precision))
   }
 
+  group <- function(x) {
+    fmt_group(x, locale$grouping, locale$grouping_mark)
+  }
+
   function(x) {
     n <- length(x)
     x_prefix <- rep(prefix, n)
     x_suffix <- rep(suffix, n)
+
+    # predefined SI prefix, then adjust the prefix
+    if (!is.null(si)) {
+      x <- si_k * x
+    }
 
     if (spec$type %==% "c") {
       x_suffix <- format_type(x)
@@ -160,13 +209,9 @@ fmt_new <- function(spec = NULL, locale = NULL) {
       s <- str_c(x_prefix,
                  str_pad(str_c(s, x_suffix),
                          width = w, side = "left", pad = spec$fill))
-      if (spec$comma) {
-        s <- group(s, locale$grouping, locale$grouping_mark)
-      }
+      if (spec$comma) s <- group(x)
     } else {
-      if (spec$comma) {
-        s <- group(s, locale$grouping, locale$grouping_mark)
-      }
+      if (spec$comma) s <- group(x)
       if (!is_empty(spec$width) && !is_empty(spec$fill)) {
         s <- switch(spec$align,
                     "<" = str_pad(str_c(x_prefix, s, x_suffix),
@@ -186,12 +231,16 @@ fmt_new <- function(spec = NULL, locale = NULL) {
         s <- str_c(x_prefix, s, x_suffix)
       }
     }
+    s <- replace_numerals(s, numerals = locale$numerals)
+    if (!is.null(si)) {
+      s <- str_c(s, si_prefix)
+    }
     s
   }
 }
 
 #' @rdname fmt_new
 #' @export
-fmt <- function(x, spec = NULL, locale = NULL) {
-  fmt_new(spec = spec, locale = locale)(x)
+fmt <- function(x, spec = NULL, locale = NULL, si = NULL) {
+  fmt_new(spec = spec, locale = locale, si = si)(x)
 }
