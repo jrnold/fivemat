@@ -1,5 +1,5 @@
-PREFIXES <- c("y", "z", "a", "f", "p", "n", "\u03BC", "m", "", "k", "M", "G", "T",
-              "P", "E", "Z", "Y")
+PREFIXES <- c("y", "z", "a", "f", "p", "n", "\u03BC", "m", "", "k", "M", "G",
+              "T", "P", "E", "Z", "Y")
 
 prefix_exponent <- function(x) pmax(-8L, pmin(8L, floor(x %/% 3L))) * 3L
 
@@ -59,8 +59,8 @@ fmt_format <- function(x, spec = NULL, locale = NULL) {
   } else {
     format_type <- fmt_types[spec$type]
   }
-  maybe_suffix <- {is.null(spec$type) ||
-      {spec$type %in% c("d", "e", "f", "g", "p", "r", "s", "%")}}
+  maybe_suffix <- {is.null(spec$type) || # nolint
+      {spec$type %in% c("d", "e", "f", "g", "p", "r", "s", "%")}} # nolint
 
   # or clamp the specified precision to the supported range.
   # For significant precision, it must be in [1, 21].
@@ -103,7 +103,7 @@ fmt_format <- function(x, spec = NULL, locale = NULL) {
 
   # If the fill character is not "0", grouping is applied before padding.
   if (spec$comma && !(spec$fill != "0" && spec$align != "=")) {
-    # value <- group(s, Inf)
+    NULL
   }
 
   s

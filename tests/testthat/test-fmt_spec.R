@@ -1,17 +1,17 @@
 context("fmt_spec")
 
-test_that("as_fmt_spec(specifier) throws an error for invalid formats", function(test) {
+test_that("as_fmt_spec(specifier) throws an error for invalid formats", {
   expect_error(as_fmt_spec("foo"), regexp = "\"foo\" is an invalid format.")
   expect_error(as_fmt_spec(".-2s"), regexp = "\"\\.-2s\" is an invalid format")
   expect_error(as_fmt_spec(".f"), regexp = "\"\\.f\" is an invalid format")
 })
 
-test_that("as_fmt_spec(specifier) returns a as_fmt_spec object", function(test) {
+test_that("as_fmt_spec(specifier) returns a as_fmt_spec object", {
   s <- as_fmt_spec("")
   expect_is(s, "fmt_spec")
 })
 
-test_that("as_fmt_spec(\"\") has the expected defaults", function(test) {
+test_that("as_fmt_spec(\"\") has the expected defaults", {
   s <- as_fmt_spec()
   expect_equal(s$fill, " ")
   expect_equal(s$align, ">")
@@ -40,7 +40,7 @@ test_that("as_fmt_spec(\"0\") is an alias for \"0=\"", {
   expect_equal(s$align, "=")
 })
 
-test_that("format(as_fmt_spec(specifier)) reflects current field values", function(test) {
+test_that("format(as_fmt_spec(specifier)) reflects current field values", {
   s <- as_fmt_spec()
   s$fill <- "_"
   expect_equal(format(s), "_>-")
@@ -48,7 +48,7 @@ test_that("format(as_fmt_spec(specifier)) reflects current field values", functi
   expect_equal(format(s), "_^-")
   s$sign <- "+"
   expect_equal(format(s), "_^+")
-  s$symbol = "$"
+  s$symbol <- "$"
   expect_equal(format(s), "_^+$")
   s$align <- "="
   s$fill <- "0"

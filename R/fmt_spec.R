@@ -4,8 +4,8 @@ fmt_decimal <- function(x, p) {
   strx <- character(length(x))
   strx[is.finite(x)] <- formatC(abs(is.finite(x)), format = "e", digits = p)
   split <- stringr::str_split_fixed(strx, "e", 2)
-  tibble::tibble(mantissa = str_replace(split[ , 1], "[^0-9]", ""),
-                 exponent = as.integer(split[ , 2]))
+  tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
+                 exponent = as.integer(split[, 2]))
 }
 
 fmt_rounded <- function(x, p) {
@@ -84,8 +84,16 @@ fmt_types <- list(
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
-RE = stringr::regex("^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$",
-                    ignore_case = TRUE)
+RE <- stringr::regex(str_c("^",
+                          "(?:(.)?([<>=^]))?",
+                          "([+\\-\\( ])?",
+                          "([$#])?",
+                          "(0)?",
+                          "(\\d+)?",
+                          "(,)?",
+                          "(\\.\\d+)?",
+                          "([a-z%])?",
+                          "$"), ignore_case = TRUE)
 
 #' @rdname fmt_spec
 #' @importFrom assertthat is.string
