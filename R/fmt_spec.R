@@ -1,5 +1,3 @@
-# [[fill]align][sign][symbol][0][width][,][.precision][type]
-RE = "^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$"
 
 na_else <- function(x, default) {
   dplyr::if_else(!is.na(x), x, default)
@@ -34,14 +32,19 @@ fmt_types <- list(
   "x" = function(x) fmt_hex(x, upper = FALSE)
 )
 
+# [[fill]align][sign][symbol][0][width][,][.precision][type]
+RE = "^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$"
+
 #' @rdname fmt_spec
 #' @importFrom assertthat is.string
-as_fmt_spec <- function(x) {
-  if (inherits("fmt_spec")) return(x)
+#' @export
+as_fmt_spec <- function(x = character()) {
+  if (inherits(x, "fmt_spec")) return(x)
+  if (purrr::is_empty(x) || x == "") return(fmt_spec())
   spec <- as.character(x)
   assert_that(is.string(spec))
-  m <- stringr::str_match(x, RE)
-  if (any(is.na(m))) {
+  m <- stringr::str_match(x, RE)[1, ]
+  if (all(is.na(m))) {
     stop("\"", spec, "\" is an invalid format.", call. = FALSE)
   }
 
@@ -49,12 +52,12 @@ as_fmt_spec <- function(x) {
   res$fill <- na_else(match[1], " ")
   res$align <- na_else(match[2], ">")
   res$sign <- na_else(match[3], "-")
-  res$symbol <- na_else(match[4], "")
+  res$symbol <- na_else(match[4], NULL)
   res$zero <- !is.na(match[5])
-  res$width <- if (is.na(match[6])) NA_integer_ else as.integer(match[6])
+  res$width <- if (is.na(match[6])) NULL else as.integer(match[6])
   res$comma <- !is.na(match[7])
   res$precision <- if (is.na(match[8])) {
-    NA_integer_
+    NULL
   } else {
     as.integer(stringr::str_sub(match[8], 2))
   }
@@ -90,7 +93,9 @@ as_fmt_spec <- function(x) {
 #'
 #' @details
 #'
-#' \code{as_fmt_spec()} returns a new format function for the given string *specifier*. The returned function takes a number as the only argument, and returns a string representing the formatted number. The general form of a specifier is:
+#' \code{as_fmt_spec()} returns a \code{fmt_spec} object for the given string \code{specifier}.
+#' The returned function takes a number as the only argument, and returns a string representing the formatted number.
+#' The general form of a specifier is:
 #' \verb{[[fill]align][sign][symbol][0][width][,][.precision][type]}
 #'
 #' The \code{fill} can be any character. The presence of a fill character is signaled by the *align* character following it, which must be one of the following:
@@ -102,24 +107,24 @@ as_fmt_spec <- function(x) {
 #' }
 #'
 #' The \code{sign} can be:
-#' \item{
-#' \item{\code{"-} - nothing for positive and a minus sign for negative. (Default behavior.)
-#' \item{\code{"+"} - a plus sign for positive and a minus sign for negative.
-#' \code{{"("} - nothing for positive and parentheses for negative.
-#' \code{{" "} (space) - a space for positive and a minus sign for negative.
+#' \itemize{
+#' \item{\code{"-} : nothing for positive and a minus sign for negative. (Default behavior.)}
+#' \item{\code{"+"} : a plus sign for positive and a minus sign for negative.}
+#' \code{{"("} : nothing for positive and parentheses for negative.}
+#' \code{{" "} (space) : a space for positive and a minus sign for negative.}
 #' }
 #'
 #' The \code{symbol} can be:
-#' \item {
-#' \item{\code{"$"}: apply currency symbols per the locale definition.
-#' \item{\code{"#"}: for binary, octal, or hexadecimal notation, prefix by \code{"0b"}, \code{"0o"}, or \code{"0x"}, respectively.
+#' \itemize{
+#' \item{\code{"$"}: apply currency symbols per the locale definition.}
+#' \item{\code{"#"}: for binary, octal, or hexadecimal notation, prefix by \code{"0b"}, \code{"0o"}, or \code{"0x"}, respectively.}
 #' }
 #'
 #' The \code{zero} (\code{0}) option enables zero-padding; this implicitly sets \code{fill} to \code{"0"} and \code{align} to \code{"="}.
 #' The \code{width} defines the minimum field width; if not specified, then the width will be determined by the content.
 #' The \code{comma} (\code{,}) option enables the use of a group separator, such as a comma for thousands.
 #'
-#' Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"%"}), or the number of significant digits (\code{NULL}, "e"`, `"g"`, `"r"`, `"s"`, `"p"`).
+#' Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"\%"}), or the number of significant digits (\code{NULL}, "e"`, `"g"`, `"r"`, `"s"`, `"p"`).
 #' If the precision is not specified, it defaults to 6 for all types except \code{NULL}, which defaults to 12.
 #' Precision is ignored for integer formats (types \code{"b"}, \code{"o"}, \code{"d"}, \code{"x"}, \code{"X"} and \code{"c"}).
 #' See \code{\link{precision_fixed}} and \code{\link{precision_round}} for help picking an appropriate precision.
@@ -131,7 +136,7 @@ as_fmt_spec <- function(x) {
 #' \item{ \code{"g"} - either decimal or exponent notation, rounded to significant digits.}
 #' \item{ \code{"r"} - decimal notation, rounded to significant digits.}
 #' \item{ \code{"s"} - decimal notation with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
-#' \item{ \code{"%"} - multiply by 100, and then decimal notation with a percent sign.}
+#' \item{ \code{"\%"} - multiply by 100, and then decimal notation with a percent sign.}
 #' \item{ \code{"p"} - multiply by 100, round to significant digits, and then decimal notation with a percent sign.}
 #' \item{ \code{"b"} - binary notation, rounded to integer.}
 #' \item{ \code{"o"} - octal notation, rounded to integer.}
@@ -143,18 +148,20 @@ as_fmt_spec <- function(x) {
 #' }
 #' The type \code{n} is also supported as shorthand for \code{,g}.
 #'
-#' For the \code{"g"}, \code{"n"} and \code{NULL} (none) types, decimal notation is used if the resulting string would have *precision* or fewer digits; otherwise, exponent notation is used. For example:
+#' For the \code{"g"}, \code{"n"} and \code{NULL} (none) types, decimal notation is used if the resulting string would
+#' have \code{precision} or fewer digits; otherwise,
+#' an exponent notation is used.
 #'
 #' @export
 #' @importFrom assertthat is.flag is.number
-fmt_spec <- function(fill = NULL,
+fmt_spec <- function(fill = " ",
                      align = c(">", "<", "^", "="),
                      sign = c("-", "+", "(", " "),
                      symbol = NULL,
                      zero = FALSE,
-                     width = NA_integer_,
+                     width = NULL,
                      comma = FALSE,
-                     precision = NA_integer_,
+                     precision = NULL,
                      type = NULL) {
   assert_that(is.string(fill))
   align <- match.arg(align)
@@ -164,8 +171,8 @@ fmt_spec <- function(fill = NULL,
   }
   assert_that(is.flag(zero))
   assert_that(is.flag(comma))
-  assert_that(is.number(width))
-  assert_that(is.number(precision))
+  assert_that(is.null(width) || is.number(width))
+  assert_that(is.null(precision) || is.number(precision))
   assert_that(is.null(type) || is.string(type))
 
   res <- list(fill = fill, align = align, sign = sign,
@@ -183,7 +190,7 @@ fmt_spec <- function(fill = NULL,
     }
   }
   # If zero fill is specified, padding goes after sign and before digits.
-  if (res$zero) {
+  if (zero) {
     res$fill <- "0"
     res$align <- "="
   }
@@ -191,15 +198,22 @@ fmt_spec <- function(fill = NULL,
 }
 
 #' @export
-print.fmt_spec <- function(x, ...) {
+format.fmt_spec <- function(x, ...) {
   stringr::str_c(x$fill,
                   x$align,
                   x$sign,
                   x$symbol,
-                  if (is.na(x$width)) "" else max(1, x$width),
+                  if (is.null(x$width)) "" else max(1, x$width),
                   if (x$comma) "," else "",
-                  if (is.na(x$precision)) "" else "." + max(0, x$precision),
+                  if (is.null(x$precision)) "" else "." + max(0, x$precision),
                   if (is.null(x$type)) "" else x$type)
 }
 
+#' @export
+as.character.fmt_spec <- format.fmt_spec
 
+#' @export
+print.fmt_spec <- function(x, ...) {
+  message("<fmt_spec>: ", format(x, ...))
+  invisible(x)
+}
