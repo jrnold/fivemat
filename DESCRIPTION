@@ -4,8 +4,7 @@ Title: Formatting Numbers for Display
 Version: 0.0.1
 Authors@R: c(person("Jeffrey", "Arnold", email = "jeffrey.arnold@gmail.com",
                     role = c("aut", "cre")))
-Description: Better formatting for numbers. This is an R clone of the Javascript 
-    package d3-format.
+Description: Better formatting for numbers.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

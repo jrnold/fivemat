@@ -2,27 +2,27 @@
 fmt_decimal <- function(x, p) {
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
-  strx[is.finite(x)] <- formatC(abs(x[is.finite(x)]), format = "e", digits = p)
+  strx[is.finite(x)] <- formatC(abs(x[is.finite(x)]), format = "e",
+                                # since n.nn, needs precision - 1L
+                                digits = p - 1L)
   split <- stringr::str_split_fixed(strx, "e", 2)
   tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
                  exponent = as.integer(split[, 2]))
 }
 
+#' @importFrom dplyr case_when
+#' @noRd
 fmt_rounded <- function(x, p) {
   d <- fmt_decimal(x, p)
-  if_else(
-    is.finite(x),
-    if_else(
-      d$mantissa < 0,
-      str_c("0.", strrep("0", d$exponent), d$mantissa),
-      if_else(
-        str_length(d$mantissa) > d$exponent,
-        str_c(str_sub(d$mantissa, 1L, d$exponent - 1L), ".",
-              str_sub(d$mantissa, d$exponent)),
-        str_c(d$mantissa, strrep("0", d$exponent))
-      )
-    ),
-    base::format(x)
+  case_when(
+    !is.finite(x) ~ base::format(x),
+    d$exponent < 0 ~ str_c("0.", strrep("0", d$exponent), d$mantissa),
+    str_length(d$mantissa) > (d$exponent + 1L) ~
+      str_c(str_sub(d$mantissa, 1L, d$exponent), ".",
+            str_sub(d$mantissa, d$exponent + 1L)),
+    TRUE ~ str_c(d$mantissa,
+                 strrep("0", pmax(0L,
+                                  d$exponent - str_length(d$mantissa) + 1L)))
   )
 }
 
@@ -31,7 +31,8 @@ fmt_default <- function(x, p) {
   formatC(x, format = "f", digits = p, drop0trailing = TRUE)
 }
 
-# TODO: placeholder
+#' @importFrom dplyr case_when
+#' @noRd
 fmt_prefix_auto <- function(x, p) {
   fin <- is.finite(x)
   out <- vector("character", length(x))
@@ -40,18 +41,14 @@ fmt_prefix_auto <- function(x, p) {
   i <- d$exponent - prefix_exponent(d$exponent) + 1L
   n <- str_length(d$mantissa)
   out[fin] <-
-    if_else(i == n,
-            d$mantissa,
-            if_else(i > n,
-                    str_c(d$mantissa, strrep("0", i - n + 1L)),
-                    if_else(i > 0L,
-                            str_c(str_sub(d$mantissa, 1L, i), ".",
-                                  str_sub(d$mantissa, i + 1L)),
-                            str_c("0.", strrep("0", 1L - i),
-                                  fmt_decimal(x[fin],
-                                              pmax(0L, p + i - 1L))$mantissa)
-                            )
-            )
+    case_when(
+      i == n ~ d$mantissa,
+      i > n ~ str_c(d$mantissa, strrep("0", pmax(0L, i - n + 1L))),
+      i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
+                      str_sub(d$mantissa, i + 1L)),
+      TRUE ~ str_c("0.", strrep("0", pmax(0L, 1L - i)),
+                   fmt_decimal(x[fin],
+                               pmax(0L, p + i - 1L))$mantissa)
     )
   out
 }
@@ -59,8 +56,8 @@ fmt_prefix_auto <- function(x, p) {
 fmt_types <- list(
   "%" = function(x, p) formatC(x * 100, format = "f", digits = p),
   # a and A are from R sprintf
-  "a" = function(x, p) sprintf(paste0("%.", p, "a"), x),
-  "A" = function(x, p) sprintf(paste0("%.", p, "A"), x),
+  "a" = function(x, p) str_sub(sprintf(paste0("%.", p, "a"), x), 3),
+  "A" = function(x, p) str_sub(sprintf(paste0("%.", p, "A"), x), 3),
   "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
   "c" = function(x, p) base::as.character(x),
   "d" = function(x) as.character(round(x)),

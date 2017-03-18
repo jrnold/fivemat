@@ -15,7 +15,7 @@
 #' # Available locales
 #' names(fmt_locales)
 #' # English-US locale
-#' fmt_locales[["en_US"]]
+#' fmt_locales[["en-US"]]
 #' # French locale
-#' fmt_locales[["fr_FR"]]
+#' fmt_locales[["fr-FR"]]
 "fmt_locales"

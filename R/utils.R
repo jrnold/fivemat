@@ -1,13 +1,16 @@
+globalVariables("fmt_locales")
+
 #' @importFrom stringr str_sub str_length str_c
 #' @importFrom stringi stri_reverse
-#' @importFrom purrr keep map_chr
-group <- function(x, grouping, comma) {
+#' @importFrom purrr keep map_chr is_empty
+group <- function(x, grouping = NULL, comma = ",") {
+  if (is_empty(grouping)) return(x)
   intvls <- rep_len(grouping, max(str_length(x)))
-  start <- c(1L, intvls[-length(intvls)])
+  start <- cumsum(c(1L, intvls[-length(intvls)]))
   end <- start + intvls - 1L
   f <- function(x, start, end) {
     res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
-    res <- str_c(rev(res), collapse = comma)
+    res <- stri_reverse(str_c(res, collapse = comma))
   }
   map_chr(x, f, start = start, end = end)
 }
