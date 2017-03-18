@@ -1,6 +1,29 @@
+# split x into mantissa and exponent
+fmt_decimal <- function(x, p) {
+  # need to handle NA, NaN, Inf
+  strx <- character(length(x))
+  strx[is.finite(x)] <- formatC(abs(is.finite(x)), format = "e", digits = p)
+  split <- stringr::str_split_fixed(strx, "e", 2)
+  tibble::tibble(mantissa = str_replace(split[ , 1], "[^0-9]", ""),
+                 exponent = as.integer(split[ , 2]))
+}
 
-na_else <- function(x, default) {
-  dplyr::if_else(!is.na(x), x, default)
+fmt_rounded <- function(x, p) {
+  d <- fmt_decimal(x, p)
+  if_else(
+    is.finite(x),
+    if_else(
+      d$mantissa < 0,
+      str_c("0.", strrep("0", d$exponent), d$mantissa),
+      if_else(
+        str_length(d$mantissa) > d$exponent,
+        str_c(str_sub(d$mantissa, 1L, d$exponent - 1L), ".",
+              str_sub(d$mantissa, d$exponent)),
+        str_c(d$mantissa, strrep("0", d$exponent))
+      )
+    ),
+    base::format(x)
+  )
 }
 
 fmt_hex <- function(x, upper = FALSE) {
@@ -14,6 +37,31 @@ fmt_oct <- function(x) format(as.octmode(x))
 # like precision, but drops insignificant trailing 0's
 fmt_default <- function(x, p) {
   formatC(x, format = "f", digits = p, drop0trailing = TRUE)
+}
+
+# TODO: placeholder
+fmt_prefix_auto <- function(x, p) {
+  fin <- is.finite(x)
+  out <- vector("character", length(x))
+  out[!fin] <- format(x[!fin])
+  d <- fmt_decimal(x[fin], p)
+  i <- d$exponent - prefix_exponent(d$exponent) + 1L
+  n <- str_length(d$coefficient)
+  out[fin] <-
+    if_else(i == n,
+            d$coefficient,
+            if_else(i > n,
+                    d$coefficient + strrep("0", i - n + 1L),
+                    if_else(i > 0,
+                            str_c(str_sub(d$coefficient, 1, i), ".",
+                                  str_sub(d$coefficient, i + 1L)),
+                            str_c("0.", strrep("0", 1L - i),
+                                  fmt_decimal(x[fin],
+                                              pmax(0, p + i - 1))$coefficient)
+                            )
+            )
+    )
+  out
 }
 
 fmt_types <- list(

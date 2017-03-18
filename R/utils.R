@@ -80,36 +80,15 @@ precision_prefix_ <- function(step, value) {
          exponent(abs(step)))
 }
 
-# split x into mantissa and exponent
-fmt_decimal <- function(x, p) {
-  # need to handle NA, NaN, Inf
-  strx <- character(length(x))
-  strx[is.finite(x)] <- formatC(abs(is.finite(x)), format = "e", digits = p)
-  split <- str::str_split_fixed(strx, "e", 2)
-  tibble::tibble(mantissa = str_replace(split[ , 1], "[^0-9]", ""),
-                 exponent = as.integer(split[ , 2]))
-}
 
-fmt_rounded <- function(x, p) {
-  d <- fmt_decimal(x, p)
-  if_else(
-    is.finite(x),
-    if_else(
-      d$mantissa < 0,
-      str_c("0.", strrep("0", d$exponent), d$mantissa),
-      if_else(
-        str_length(d$mantissa) > d$exponent,
-        str_c(str_sub(d$mantissa, 1L, d$exponent - 1L), ".",
-              str_sub(d$mantissa, d$exponent)),
-        str_c(d$mantissa, strrep("0", d$exponent))
-      )
-    ),
-    base::format(x)
-  )
-}
 
 replace_numerals <- function(x, numerals = NULL) {
   if (is.null(numerals)) return(x)
   names(numerals) <- as.character(0:9)
-  stingr::str_replace_all(x, numerals)
+  stringr::str_replace_all(x, numerals)
+}
+
+
+na_else <- function(x, default) {
+  dplyr::if_else(!is.na(x), x, default)
 }
