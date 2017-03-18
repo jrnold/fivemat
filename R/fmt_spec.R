@@ -2,9 +2,7 @@
 fmt_decimal <- function(x, p) {
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
-  strx[is.finite(x)] <- formatC(abs(x[is.finite(x)]), format = "e",
-                                # since n.nn, needs precision - 1L
-                                digits = p - 1L)
+  strx[is.finite(x)] <- sprintf_("e")(abs(x[is.finite(x)]), p - 1L)
   split <- stringr::str_split_fixed(strx, "e", 2)
   tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
                  exponent = as.integer(split[, 2]))
@@ -47,8 +45,7 @@ fmt_prefix_auto <- function(x, p) {
       i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
                       str_sub(d$mantissa, i + 1L)),
       TRUE ~ str_c("0.", strrep("0", pmax(0L, 1L - i)),
-                   fmt_decimal(x[fin],
-                               pmax(0L, p + i - 1L))$mantissa)
+                   fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
   out
 }
@@ -60,7 +57,7 @@ fmt_types <- list(
   "A" = function(x, p) str_sub(sprintf(paste0("%.", p, "A"), x), 3),
   "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
   "c" = function(x, p) base::as.character(x),
-  "d" = function(x) as.character(round(x)),
+  "d" = function(x, p) as.character(round(x)),
   "e" = function(x, p) formatC(x, format = "e", digits = p),
   "f" = function(x, p) formatC(x, format = "f", digits = p),
   "g" = function(x, p) formatC(x, format = "g", digits = p),

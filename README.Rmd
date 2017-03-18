@@ -20,9 +20,10 @@ The `fmt` function is the primary function in the package.
 The formatting is defined using a mini-language similar to `sprintf`.
 Some examples include:
 
-A rounded percetage,
+A rounded percentage,
 ```{r}
-fmt(0.123, ".0%")
+fmt(c(0.1, 0.12, 0.123, 0.1234), ".0%")
+fmt(c(0.1, 0.12, 0.123, 0.1234), ".1%")
 ```
 a localized fixed-point currency,
 ```{r}
@@ -39,7 +40,7 @@ fmt(42, ".^20")
 ```
 a SI-prefixed number with two significant digits,
 ```{r}
-fmt(42e6, ".2s")   # SI-prefix with two significant digits, "42M"
+fmt(1.23 * 10 ^ seq(-24, 24, by = 3), ".2s")
 ```
 a prefixed lowercase hexadecimal number,
 ```{r}
@@ -50,14 +51,32 @@ a number grouped by thousands with two-significant digits,
 fmt(4223, ",.2r")
 ```
 
+The `locale` argument supports localization of groupings, decimal marks, numerals,
+```{r}
+x <- 12345678910.12
+fmt(x, "$,.2f", locale = "en-US")
+fmt(x, "$,.2f", locale = "en-GB")
+fmt(x, "$,.2f", locale = "en-IN")
+fmt(x, "$,.2f", locale = "fr-FR")
+fmt(x, "$,.2f", locale = "ar-SA")
+fmt(x, "$,.2f", locale = "zh-CN")
+fmt(x, "$,.2f", locale = "ja-JP")
+```
+
+
+The available default locales are in the `fmt_locales`.
+The default locales are those provided by the [d3-format](https://github.com/d3/d3-format) Javascript library.
+
 The `si` argument can be used to apply a common SI-prefix to all the values.
 ```{r}
 fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
 ```
 
-Additionally, formats can be saved as a function object to be reused,
+Formats can be saved as a function to be reused,
 ```{r}
 formatter <- fmt_new(",.2f")
 formatter(c(1, 100, 1000, 1050, 1.50))
 formatter(rnorm(5))
 ```
+
+Formats 

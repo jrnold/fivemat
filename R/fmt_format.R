@@ -209,9 +209,9 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       s <- str_c(x_prefix,
                  str_pad(str_c(s, x_suffix),
                          width = w, side = "left", pad = spec$fill))
-      if (spec$comma) s <- group(x)
+      if (spec$comma) s <- group(s)
     } else {
-      if (spec$comma) s <- group(x)
+      if (spec$comma) s <- group(s)
       if (!is_empty(spec$width) && !is_empty(spec$fill)) {
         s <- switch(spec$align,
                     "<" = str_pad(str_c(x_prefix, s, x_suffix),
