@@ -2,7 +2,8 @@
 fmt_decimal <- function(x, p) {
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
-  strx[is.finite(x)] <- sprintf_("e")(abs(x[is.finite(x)]), p - 1L)
+  strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
+                                abs(x[is.finite(x)]), p - 1L)
   split <- stringr::str_split_fixed(strx, "e", 2)
   tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
                  exponent = as.integer(split[, 2]))
