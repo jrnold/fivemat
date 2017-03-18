@@ -18,8 +18,11 @@ fmt_default <- function(x, p) {
 
 fmt_types <- list(
   "%" = function(x, p) formatC(x * 100, format = "f", digits = p),
+  # a and A are from R sprintf
+  "a" = function(x, p) sprintf(paste0("%.", p, "a"), x),
+  "A" = function(x, p) sprintf(paste0("%.", p, "A"), x),
   "b" = fmt_bin,
-  "c" = base::format,
+  "c" = base::as.character,
   "d" = function(x) as.character(round(x)),
   "e" = function(x, p) formatC(x, format = "e", digits = p),
   "f" = function(x, p) formatC(x, format = "f", digits = p),
@@ -33,35 +36,37 @@ fmt_types <- list(
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
-RE = "^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$"
+RE = stringr::regex("^(?:(.)?([<>=^]))?([+\\-\\( ])?([$#])?(0)?(\\d+)?(,)?(\\.\\d+)?([a-z%])?$",
+                    ignore_case = TRUE)
 
 #' @rdname fmt_spec
 #' @importFrom assertthat is.string
+#' @importFrom stringr str_length str_detect regex str_match str_sub
 #' @export
 as_fmt_spec <- function(x = character()) {
   if (inherits(x, "fmt_spec")) return(x)
   if (purrr::is_empty(x) || x == "") return(fmt_spec())
   spec <- as.character(x)
   assert_that(is.string(spec))
-  m <- stringr::str_match(x, RE)[1, ]
+  # drop 1st element because that is the full pattern
+  m <- str_match(spec, RE)[1, -1]
   if (all(is.na(m))) {
     stop("\"", spec, "\" is an invalid format.", call. = FALSE)
   }
-
   res <- list()
-  res$fill <- na_else(match[1], " ")
-  res$align <- na_else(match[2], ">")
-  res$sign <- na_else(match[3], "-")
-  res$symbol <- na_else(match[4], NULL)
-  res$zero <- !is.na(match[5])
-  res$width <- if (is.na(match[6])) NULL else as.integer(match[6])
-  res$comma <- !is.na(match[7])
-  res$precision <- if (is.na(match[8])) {
+  res$fill <- na_else(m[1], " ")
+  res$align <- na_else(m[2], ">")
+  res$sign <- na_else(m[3], "-")
+  res$symbol <- if (is.na(m[4])) NULL else m[4]
+  res$zero <- !is.na(m[5])
+  res$width <- if (is.na(m[6])) NULL else as.integer(match[6])
+  res$comma <- !is.na(m[7])
+  res$precision <- if (is.na(m[8])) {
     NULL
   } else {
-    as.integer(stringr::str_sub(match[8], 2))
+    as.integer(str_sub(m[8], 2))
   }
-  res$type <- na_else(match[9], ".")
+  res$type <- if (is.na(m[9])) NULL else m[9]
   purrr::invoke(fmt_spec, res)
 }
 
@@ -153,6 +158,7 @@ as_fmt_spec <- function(x = character()) {
 #' an exponent notation is used.
 #'
 #' @export
+#' @importFrom stringr str_to_lower
 #' @importFrom assertthat is.flag is.number
 fmt_spec <- function(fill = " ",
                      align = c(">", "<", "^", "="),
@@ -183,6 +189,8 @@ fmt_spec <- function(fill = " ",
     if (res$type == "n") {
       res$comma <- TRUE
       res$type <- "g"
+    } else if (type %in% c("e", "g")) {
+      res$type <- str_to_lower(type)
     } else if (!type %in% names(fmt_types)) {
       # Map invalid types to the default format.
       # Use something else for default?
@@ -205,7 +213,8 @@ format.fmt_spec <- function(x, ...) {
                   x$symbol,
                   if (is.null(x$width)) "" else max(1, x$width),
                   if (x$comma) "," else "",
-                  if (is.null(x$precision)) "" else "." + max(0, x$precision),
+                  if (is.null(x$precision)) ""
+                  else str_c(".", max(0, x$precision)),
                   if (is.null(x$type)) "" else x$type)
 }
 

@@ -30,14 +30,14 @@ test_that("as_fmt_spec(specifier) uses the none type for unknown types", {
 
 test_that("as_fmt_spec(\"n\") is an alias for \",g\"", {
   s <- as_fmt_spec("n")
-  expect_equal(s.comma, TRUE)
-  expect_equal(s.type, "g")
+  expect_equal(s$comma, TRUE)
+  expect_equal(s$type, "g")
 })
 
 test_that("as_fmt_spec(\"0\") is an alias for \"0=\"", {
   s <- as_fmt_spec("0")
-  expect_equal(s.fill, "0")
-  expect_equal(s.align, "=")
+  expect_equal(s$fill, "0")
+  expect_equal(s$align, "=")
 })
 
 test_that("format(as_fmt_spec(specifier)) reflects current field values", function(test) {
