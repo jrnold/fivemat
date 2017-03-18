@@ -5,21 +5,33 @@ na_else <- function(x, default) {
   dplyr::if_else(!is.na(x), x, default)
 }
 
+fmt_hex <- function(x, upper = FALSE) {
+  format(as.hexmode(round(x)), upper.case = upper)
+}
+
+fmt_bin <- function(x) as.character(R.utils::intToBin(round(x)))
+
+fmt_oct <- function(x) format(as.octmode(x))
+
+# like precision, but drops insignificant trailing 0's
+fmt_default <- function(x, p) {
+  formatC(x, format = "f", digits = p, drop0trailing = TRUE)
+}
+
 fmt_types <- list(
-  NULL = NULL, #formatDefault,
-  "%" = function(x, p) sprintf(paste0("%f.", p), x * 100),
-  "b" = function(x) as.character(R.utils::intToBin(round(x))),
-  "c" = as.character,
+  "%" = function(x, p) formatC(x * 100, format = "f", digits = p),
+  "b" = fmt_bin,
+  "c" = base::format,
   "d" = function(x) as.character(round(x)),
-  "e" = function(x, p) sprintf(paste0("%e.", p), x),
-  "f" = function(x, p) sprintf(paste0("%d.", p), x),
-  "g" = function(x, p) sprintf(paste0("%g.", p), x),
-  "o" = function(x) format(as.octmode(x)),
+  "e" = function(x, p) formatC(x, format = "e", digits = p),
+  "f" = function(x, p) formatC(x, format = "f", digits = p),
+  "g" = function(x, p) formatC(x, format = "g", digits = p),
+  "o" = fmt_oct,
   "p" = NULL, # function(x, p) { return formatRounded(x * 100, p); },
   "r" = NULL, # formatRounded,
   "s" = NULL, # formatPrefixAuto,
-  "X" = function(x) format(as.hexmode(round(x)), upper.case = TRUE),
-  "x" = function(x) format(as.hexmode(round(x)), upper.case = FALSE)
+  "X" = function(x) fmt_hex(x, upper = TRUE),
+  "x" = function(x) fmt_hex(x, upper = FALSE)
 )
 
 #' @rdname fmt_spec
@@ -50,14 +62,88 @@ as_fmt_spec <- function(x) {
   purrr::invoke(fmt_spec, res)
 }
 
-#' Format Spec
+#' Format Specification
 #'
-#' @param x An object to convert to a format spec: a string representation
-#'   of the spec.
-#' @param fill A string. See details.
+#' @param x A string representation of the spec. See Details.
+#' @param fill A string. See Details.
 #' @param align A string. See Details.
 #' @param sign A string. See Details.
 #' @param symbol A string. See Details.
+#' @param zero A logical vector of length one. See Details.
+#' @param width An integer vector of length one. See Details.
+#' @param comma An logical vector of length one. See Details.
+#' @param precision An integer vector of length one. See Details.
+#' @param type A character vector of length one. See Details.
+#' @return An object of class \code{"fmt_spec"}. This is a list with elements:
+#' \describe{
+#' \item{fill}{Character vector of length one. See Details.}
+#' \item{align}{Character vector of length one. See Details.}
+#' \item{sign}{Character vector of length one. See Details.}
+#' \item{symbol}{Character vector of length one. See Details.}
+#' \item{width}{Integer vector of length one. See Details.}
+#' \item{comma}{Logical vector of length one. See Details.}
+#' \item{precision}{Integer vector of length one.}
+#' \item{type}{Character vector of length one, or \code{NULL} if the
+#'             default type}
+#' }
+#'
+#'
+#' @details
+#'
+#' \code{as_fmt_spec()} returns a new format function for the given string *specifier*. The returned function takes a number as the only argument, and returns a string representing the formatted number. The general form of a specifier is:
+#' \verb{[[fill]align][sign][symbol][0][width][,][.precision][type]}
+#'
+#' The \code{fill} can be any character. The presence of a fill character is signaled by the *align* character following it, which must be one of the following:
+#' \itemize{
+#' \item{\code{>}: Forces the field to be right-aligned within the available space.}
+#' \item{\code{<}: Forces the field to be left-aligned within the available space.}
+#' \item{\code{^}: Forces the field to be centered within the available space.}
+#' \item{\code{=}: like \code{>}, but with any sign and symbol to the left of any padding.}
+#' }
+#'
+#' The \code{sign} can be:
+#' \item{
+#' \item{\code{"-} - nothing for positive and a minus sign for negative. (Default behavior.)
+#' \item{\code{"+"} - a plus sign for positive and a minus sign for negative.
+#' \code{{"("} - nothing for positive and parentheses for negative.
+#' \code{{" "} (space) - a space for positive and a minus sign for negative.
+#' }
+#'
+#' The \code{symbol} can be:
+#' \item {
+#' \item{\code{"$"}: apply currency symbols per the locale definition.
+#' \item{\code{"#"}: for binary, octal, or hexadecimal notation, prefix by \code{"0b"}, \code{"0o"}, or \code{"0x"}, respectively.
+#' }
+#'
+#' The \code{zero} (\code{0}) option enables zero-padding; this implicitly sets \code{fill} to \code{"0"} and \code{align} to \code{"="}.
+#' The \code{width} defines the minimum field width; if not specified, then the width will be determined by the content.
+#' The \code{comma} (\code{,}) option enables the use of a group separator, such as a comma for thousands.
+#'
+#' Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"%"}), or the number of significant digits (\code{NULL}, "e"`, `"g"`, `"r"`, `"s"`, `"p"`).
+#' If the precision is not specified, it defaults to 6 for all types except \code{NULL}, which defaults to 12.
+#' Precision is ignored for integer formats (types \code{"b"}, \code{"o"}, \code{"d"}, \code{"x"}, \code{"X"} and \code{"c"}).
+#' See \code{\link{precision_fixed}} and \code{\link{precision_round}} for help picking an appropriate precision.
+#'
+#' The available \code{type} values are:
+#' \itemize{
+#' \item{ \code{"e"} - exponent notation.}
+#' \item{ \code{"f"} - fixed point notation.}
+#' \item{ \code{"g"} - either decimal or exponent notation, rounded to significant digits.}
+#' \item{ \code{"r"} - decimal notation, rounded to significant digits.}
+#' \item{ \code{"s"} - decimal notation with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
+#' \item{ \code{"%"} - multiply by 100, and then decimal notation with a percent sign.}
+#' \item{ \code{"p"} - multiply by 100, round to significant digits, and then decimal notation with a percent sign.}
+#' \item{ \code{"b"} - binary notation, rounded to integer.}
+#' \item{ \code{"o"} - octal notation, rounded to integer.}
+#' \item{ \code{"d"} - decimal notation, rounded to integer.}
+#' \item{ \code{"x"} - hexadecimal notation, using lower-case letters, rounded to integer.}
+#' \item{ \code{"X"} - hexadecimal notation, using upper-case letters, rounded to integer.}
+#' \item{ \code{"c"} - converts the integer to the corresponding unicode character before printing.}
+#' \item{ \code{NULL} - like \code{"g"}, but trim insignificant trailing zeros.}
+#' }
+#' The type \code{n} is also supported as shorthand for \code{,g}.
+#'
+#' For the \code{"g"}, \code{"n"} and \code{NULL} (none) types, decimal notation is used if the resulting string would have *precision* or fewer digits; otherwise, exponent notation is used. For example:
 #'
 #' @export
 #' @importFrom assertthat is.flag is.number
@@ -96,7 +182,6 @@ fmt_spec <- function(fill = NULL,
       res[["type"]] <- NULL
     }
   }
-
   # If zero fill is specified, padding goes after sign and before digits.
   if (res$zero) {
     res$fill <- "0"
@@ -114,41 +199,7 @@ print.fmt_spec <- function(x, ...) {
                   if (is.na(x$width)) "" else max(1, x$width),
                   if (x$comma) "," else "",
                   if (is.na(x$precision)) "" else "." + max(0, x$precision),
-                  if (x$type == "NULL") "" else x$type)
+                  if (is.null(x$type)) "" else x$type)
 }
 
-#' Format locale
-#'
-#' Create a a format locale. This object provides information on the symbols for decimal points, group (thousands) seperator, group sizes, currency symbols, and numerals.
-#'
-#' @param decimal_mark string. the decimal point mark (e.g., `"."``).
-#' @param grouping_mark string. the grouping mark (e.g., `","``).
-#' @param grouping numeric vector group sizes (e.g., c(3L)). It is recycled as needed.
-#' @param currency character vector of length two with the currency prefix and suffix (e.g., `c("$", "")`
-#' @param numerals A character vector of length ten to replace the numerals 0-9.
-#' @return  An object of class `"fmt_locale"`, which is a named list with elements: `decimal`, `thousands`, `grouping`, `currency`, and `numerals` (optional).
-#' @export
-fmt_locale <- function(decimal_mark = ".",
-                       grouping_mark = ",",
-                       grouping = 3,
-                       currency = c("", ""),
-                       numerals = NULL) {
-  assert_that(is.string(decimal_mark))
-  assert_that(is.string(grouping_mark))
-  assert_that(is.numeric(grouping))
-  grouping <- as.integer(grouping)
-  assert_that(is.character(currency) && length(currency) == 2)
-  if (!is.null(numerals)) {
-    assert_that(is.character(numerals) && length(numerals) == 10)
-  }
-  structure(
-    list(
-      decimal_mark = decimal_mark,
-      grouping_mark = grouping_mark,
-      grouping = grouping,
-      currency = currency,
-      numerals = numerals
-    ),
-    class = "fmt_locale"
-  )
-}
+

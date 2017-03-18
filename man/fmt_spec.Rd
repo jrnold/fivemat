@@ -3,7 +3,7 @@
 \name{as_fmt_spec}
 \alias{as_fmt_spec}
 \alias{fmt_spec}
-\title{Format Spec}
+\title{Format Specification}
 \usage{
 as_fmt_spec(x)
 
@@ -12,17 +12,40 @@ fmt_spec(fill = NULL, align = c(">", "<", "^", "="), sign = c("-", "+",
   comma = FALSE, precision = NA_integer_, type = NULL)
 }
 \arguments{
-\item{x}{An object to convert to a format spec: a string representation
-of the spec.}
+\item{x}{A string representation of the spec. See Details.}
 
-\item{fill}{A string. See details.}
+\item{fill}{A string. See Details.}
 
 \item{align}{A string. See Details.}
 
 \item{sign}{A string. See Details.}
 
 \item{symbol}{A string. See Details.}
+
+\item{zero}{A logical vector of length one. See Details.}
+
+\item{width}{An integer vector of length one. See Details.}
+
+\item{comma}{An logical vector of length one. See Details.}
+
+\item{precision}{An integer vector of length one. See Details.}
+
+\item{type}{A character vector of length one. See Details.}
+}
+\value{
+An object of class \code{"fmt_spec"}. This is a list with elements:
+\describe{
+\item{fill}{Character vector of length one. See Details.}
+\item{align}{Character vector of length one. See Details.}
+\item{sign}{Character vector of length one. See Details.}
+\item{symbol}{Character vector of length one. See Details.}
+\item{width}{Integer vector of length one. See Details.}
+\item{comma}{Logical vector of length one. See Details.}
+\item{precision}{Integer vector of length one.}
+\item{type}{Character vector of length one, or \code{NULL} if the
+            default type}
+}
 }
 \description{
-Format Spec
+Format Specification
 }
