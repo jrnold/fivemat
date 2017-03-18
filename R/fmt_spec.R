@@ -2,7 +2,7 @@
 fmt_decimal <- function(x, p) {
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
-  strx[is.finite(x)] <- formatC(abs(is.finite(x)), format = "e", digits = p)
+  strx[is.finite(x)] <- formatC(abs(x[is.finite(x)]), format = "e", digits = p)
   split <- stringr::str_split_fixed(strx, "e", 2)
   tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
                  exponent = as.integer(split[, 2]))
@@ -26,14 +26,6 @@ fmt_rounded <- function(x, p) {
   )
 }
 
-fmt_hex <- function(x, upper = FALSE) {
-  format(as.hexmode(round(x)), upper.case = upper)
-}
-
-fmt_bin <- function(x) as.character(R.utils::intToBin(round(x)))
-
-fmt_oct <- function(x) format(as.octmode(x))
-
 # like precision, but drops insignificant trailing 0's
 fmt_default <- function(x, p) {
   formatC(x, format = "f", digits = p, drop0trailing = TRUE)
@@ -46,18 +38,18 @@ fmt_prefix_auto <- function(x, p) {
   out[!fin] <- format(x[!fin])
   d <- fmt_decimal(x[fin], p)
   i <- d$exponent - prefix_exponent(d$exponent) + 1L
-  n <- str_length(d$coefficient)
+  n <- str_length(d$mantissa)
   out[fin] <-
     if_else(i == n,
-            d$coefficient,
+            d$mantissa,
             if_else(i > n,
-                    d$coefficient + strrep("0", i - n + 1L),
-                    if_else(i > 0,
-                            str_c(str_sub(d$coefficient, 1, i), ".",
-                                  str_sub(d$coefficient, i + 1L)),
+                    str_c(d$mantissa, strrep("0", i - n + 1L)),
+                    if_else(i > 0L,
+                            str_c(str_sub(d$mantissa, 1L, i), ".",
+                                  str_sub(d$mantissa, i + 1L)),
                             str_c("0.", strrep("0", 1L - i),
                                   fmt_decimal(x[fin],
-                                              pmax(0, p + i - 1))$coefficient)
+                                              pmax(0L, p + i - 1L))$mantissa)
                             )
             )
     )
@@ -69,18 +61,18 @@ fmt_types <- list(
   # a and A are from R sprintf
   "a" = function(x, p) sprintf(paste0("%.", p, "a"), x),
   "A" = function(x, p) sprintf(paste0("%.", p, "A"), x),
-  "b" = fmt_bin,
-  "c" = base::as.character,
+  "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
+  "c" = function(x, p) base::as.character(x),
   "d" = function(x) as.character(round(x)),
   "e" = function(x, p) formatC(x, format = "e", digits = p),
   "f" = function(x, p) formatC(x, format = "f", digits = p),
   "g" = function(x, p) formatC(x, format = "g", digits = p),
-  "o" = fmt_oct,
+  "o" = function(x, p) format(as.octmode(x)),
   "p" = function(x, p) fmt_rounded(x * 100, p),
   "r" = fmt_rounded,
   "s" = fmt_prefix_auto,
-  "X" = function(x) fmt_hex(x, upper = TRUE),
-  "x" = function(x) fmt_hex(x, upper = FALSE)
+  "X" = function(x, p) format(as.hexmode(round(x)), upper.case = TRUE),
+  "x" = function(x, p) format(as.hexmode(round(x)), upper.case = FALSE)
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
@@ -115,7 +107,7 @@ as_fmt_spec <- function(x = character()) {
   res$sign <- na_else(m[3], "-")
   res$symbol <- if (is.na(m[4])) NULL else m[4]
   res$zero <- !is.na(m[5])
-  res$width <- if (is.na(m[6])) NULL else as.integer(match[6])
+  res$width <- if (is.na(m[6])) NULL else as.integer(m[6])
   res$comma <- !is.na(m[7])
   res$precision <- if (is.na(m[8])) {
     NULL
