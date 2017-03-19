@@ -137,19 +137,20 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
   # or clamp the specified precision to the supported range.
   # For significant precision, it must be in [1, 21].
   # For fixed precision, it must be in [0, 20].
-  precision <- if (is.null(spec$precision)) {
-    if (is_empty(spec$type)) 6L else 12L
+  spec$precision <- if (is.null(spec$precision)) {
+    if (is_empty(spec$type)) 12L else 6L
   } else if (spec$type %==% c("g", "p", "r", "s")) {
     max(1L, min(21L, spec$precision))
   } else {
     max(0L, min(20L, spec$precision))
   }
+  precision <- spec$precision
 
   group <- function(x) {
     fmt_group(x, locale$grouping, locale$grouping_mark)
   }
 
-  function(x) {
+  structure(function(x) {
     n <- length(x)
     x_prefix <- rep(prefix, n)
     x_suffix <- rep(suffix, n)
@@ -207,11 +208,17 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     # If the fill character is not "0", grouping is applied before padding.
     # if (spec$comma && !(spec$fill != "0" && spec$align != "=")) {
     if (zero) {
-      w <- if (!is_empty(spec$width)) spec$width else 0L
-      s <- str_c(x_prefix,
-                 str_pad(str_c(s, x_suffix),
-                         width = w, side = "left", pad = spec$fill))
-      if (spec$comma) s <- group(s)
+      w <- if (!is_empty(spec$width)) {
+        spec$width - str_length(x_prefix)
+      } else {
+        0L
+      }
+      s <- str_pad(str_c(s, x_suffix), width = w, side = "left",
+                   pad = spec$fill)
+      if (spec$comma) {
+        s <- group(s)
+      }
+      s <- str_c(x_prefix, s)
     } else {
       if (spec$comma) s <- group(s)
       if (!is_empty(spec$width) && !is_empty(spec$fill)) {
@@ -221,7 +228,8 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
                                   side = "right", pad = spec$fill),
                     "=" = str_c(x_prefix,
                                 str_pad(str_c(s, x_suffix),
-                                        width = spec$width - str_length(x_prefix),
+                                        width = (spec$width -
+                                                   str_length(x_prefix)),
                                         side = "left", pad = spec$fill)),
                     "^" = str_pad(str_c(x_prefix, s, x_suffix),
                                   width = spec$width,
@@ -238,7 +246,15 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       s <- str_c(s, si_prefix)
     }
     s
-  }
+  }, class = "fmt")
+}
+
+#' @export
+print.fmt <- function(x, ...) {
+  message("<fmt>\n")
+  print(environment(x)$spec)
+  print(environment(x)$locale)
+  invisible(x)
 }
 
 #' @rdname fmt_new

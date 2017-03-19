@@ -58,7 +58,7 @@ fmt_prefix_auto <- function(x, p) {
 
 sprintf_ <- function(format) {
   force(format)
-  function(x, p) {
+  function(x, p = NULL) {
     if (is.null(p)) {
       sprintf(paste0("%", format), x)
     } else {
@@ -96,7 +96,7 @@ fmt_types <- list(
   "r" = fmt_rounded,
   "s" = fmt_prefix_auto,
   "X" = function(x, p) sprintf_("X")(round(x)),
-  "x" = function(x, p) sprintf_("x")(round(x)),
+  "x" = function(x, p) sprintf_("x")(round(x))
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]

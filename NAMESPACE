@@ -2,6 +2,7 @@
 
 S3method(as.character,fmt_spec)
 S3method(format,fmt_spec)
+S3method(print,fmt)
 S3method(print,fmt_locale)
 S3method(print,fmt_spec)
 export(as_fmt_spec)
