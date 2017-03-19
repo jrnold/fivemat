@@ -27,9 +27,14 @@ fmt_rounded <- function(x, p) {
 }
 
 # like precision, but drops insignificant trailing 0's
-fmt_default <- function(x, p) {
-  formatC(x, format = "f", digits = p, drop0trailing = TRUE)
+fmt_default <- function(x, ...) {
+  UseMethod("fmt_default")
 }
+
+fmt_default.numeric <- function(x, p, ...) sprintf_("f")(x, p)
+
+fmt_default.integer <- function(x, ...) sprintf_("d")(x)
+
 
 #' @importFrom dplyr case_when
 #' @noRd
@@ -53,23 +58,34 @@ fmt_prefix_auto <- function(x, p) {
   out
 }
 
+sprintf_ <- function(format) {
+  force(format)
+  function(x, p) {
+    if (is.null(p)) {
+      sprintf(paste0("%", format), x)
+    } else {
+      sprintf(paste0("%.", p, format), x)
+    }
+  }
+}
+
 fmt_types <- list(
-  "%" = function(x, p) formatC(x * 100, format = "f", digits = p),
+  "%" = function(x, p) sprintf_("f")(x * 100, p),
   # a and A are from R sprintf
-  "a" = function(x, p) str_sub(sprintf(paste0("%.", p, "a"), x), 3),
-  "A" = function(x, p) str_sub(sprintf(paste0("%.", p, "A"), x), 3),
+  "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
+  "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
   "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
   "c" = function(x, p) base::as.character(x),
-  "d" = function(x) as.character(round(x)),
-  "e" = function(x, p) formatC(x, format = "e", digits = p),
-  "f" = function(x, p) formatC(x, format = "f", digits = p),
-  "g" = function(x, p) formatC(x, format = "g", digits = p),
-  "o" = function(x, p) format(as.octmode(x)),
+  "d" = function(x, p) sprintf_("d")(round(x)),
+  "e" = sprintf_("e"),
+  "f" = sprintf_("f"),
+  "g" = sprintf_("g"),
+  "o" = function(x, p) sprintf_("o")(round(x)),
   "p" = function(x, p) fmt_rounded(x * 100, p),
   "r" = fmt_rounded,
   "s" = fmt_prefix_auto,
-  "X" = function(x, p) format(as.hexmode(round(x)), upper.case = TRUE),
-  "x" = function(x, p) format(as.hexmode(round(x)), upper.case = FALSE)
+  "X" = function(x, p) sprintf_("X")(round(x)),
+  "x" = function(x, p) sprintf_("x")(round(x)),
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
