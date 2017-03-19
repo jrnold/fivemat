@@ -2,9 +2,8 @@
 fmt_decimal <- function(x, p) {
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
-  strx[is.finite(x)] <- formatC(abs(x[is.finite(x)]), format = "e",
-                                # since n.nn, needs precision - 1L
-                                digits = p - 1L)
+  strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
+                                abs(x[is.finite(x)]), p - 1L)
   split <- stringr::str_split_fixed(strx, "e", 2)
   tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
                  exponent = as.integer(split[, 2]))
@@ -52,8 +51,7 @@ fmt_prefix_auto <- function(x, p) {
       i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
                       str_sub(d$mantissa, i + 1L)),
       TRUE ~ str_c("0.", strrep("0", pmax(0L, 1L - i)),
-                   fmt_decimal(x[fin],
-                               pmax(0L, p + i - 1L))$mantissa)
+                   fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
   out
 }
@@ -69,12 +67,25 @@ sprintf_ <- function(format) {
   }
 }
 
+int2bin <- function(x) {
+  if (x == 0) {
+    "0"
+  } else {}
+  out <- rev(as.integer(intToBits(x)))
+  i <- purrr::detect_index(out, as.logical)
+  str_c(out[seq(i, length(out), by = 1)], collapse = "")
+}
+
+fmt_bin <- function(x) {
+  map_chr(x, int2bin)
+}
+
 fmt_types <- list(
   "%" = function(x, p) sprintf_("f")(x * 100, p),
   # a and A are from R sprintf
   "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
   "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
-  "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
+  "b" = function(x, p) fmt_bin(round(x)),
   "c" = function(x, p) base::as.character(x),
   "d" = function(x, p) sprintf_("d")(round(x)),
   "e" = sprintf_("e"),

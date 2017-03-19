@@ -1,26 +1,4 @@
-globalVariables("fmt_locales")
-
-#' @importFrom stringr str_sub str_length str_c
-#' @importFrom stringi stri_reverse
-#' @importFrom purrr keep map_chr is_empty
-group <- function(x, grouping = NULL, comma = ",") {
-  if (is_empty(grouping)) return(x)
-  intvls <- rep_len(grouping, max(str_length(x)))
-  start <- cumsum(c(1L, intvls[-length(intvls)]))
-  end <- start + intvls - 1L
-  f <- function(x, start, end) {
-    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
-    res <- stri_reverse(str_c(res, collapse = comma))
-  }
-  map_chr(x, f, start = start, end = end)
-}
-
-# Return base 10 exponent where mantissa * 10 ^ exponent
-exponent <- function(x) {
-  dplyr::if_else(is.finite(x), floor(log10(abs(x))), NA_real_)
-}
-
-#' Suggested decimal precisions
+#' Suggested precisions
 #'
 #' \code{precision_prefix} returns a suggested decimal precision for fixed point
 #' notation.
@@ -81,17 +59,4 @@ precision_prefix_ <- function(step, value) {
   assert_that(is.numeric(value))
   pmax(0, pmax(-8, pmin(8, floor(exponent(value) / 3))) * 3 -
          exponent(abs(step)))
-}
-
-
-
-replace_numerals <- function(x, numerals = NULL) {
-  if (is.null(numerals)) return(x)
-  names(numerals) <- as.character(0:9)
-  stringr::str_replace_all(x, numerals)
-}
-
-
-na_else <- function(x, default) {
-  dplyr::if_else(!is.na(x), x, default)
 }

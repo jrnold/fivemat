@@ -1,16 +1,87 @@
 # fivemat: Better formatting for R
 
+The **fivemat** package provides better formatting for R numbers. 
+It has similar functionality to the base R functions `sprintf`, `prettyNum` and `formatC`, but with more features and support for locales.
 
+This package is primarily a port  of the Javascript library [d3-format](https://github.com/d3/d3-format/blob/master/README.md).
 
+# Installation
+
+**fivemat** is not on CRAN, you can install the development version 
+from github with
 ```{r}
-fmt_format(seq(0, 1, by = 0.1), ".1f")
-
-fmt_format(0.123, ".0%")  # rounded percentage, "12%"
-fmt_format(-3.5, "($.2f", locale = "en-GB")  # localized fixed-point currency, "(£3.50)"
-fmt_format(42, "+20")     # space-filled and signed, "                 +42"
-fmt_format(42, ".^20")    # dot-filled and centered, ".........42........."
-fmt_format(42e6, ".2s")   # SI-prefix with two significant digits, "42M"
-fmt_format(48879, "#x")   # prefixed lowercase hexadecimal, "0xbeef"
-fmt_format(4223, ",.2r")
+# install.packages("devtools")
+devtools::install_github("jrnold/fivemat")
 ```
 
+# Usage
+
+The `fmt` function is the primary function in the package.
+The formatting is defined using a mini-language similar to `sprintf`.
+Some examples include:
+
+A rounded percentage,
+```{r}
+fmt(c(0.1, 0.12, 0.123, 0.1234), ".0%")
+fmt(c(0.1, 0.12, 0.123, 0.1234), ".1%")
+```
+a localized fixed-point currency,
+```{r}
+fmt(-3.5, "($.2f", locale = "en-GB")
+fmt(-3.5, "($.2f", locale = "en-US")
+```
+a space-filled and signed number,
+```{r}
+fmt(42, "+20")
+```
+a dot-filled and centered number,
+```{r}
+fmt(42, ".^20")
+```
+SI-prefixed numbers with two significant digits,
+```{r}
+fmt(1.23 * 10 ^ seq(-24, 24, by = 1), ",.2s")
+```
+SI-prefixed numbers with one digit after the decimal point and
+a common SI-prefix,
+```{r}
+fmt(1.23 * 10 ^ seq(-24, 24, by = 1), ".1", si = 1e3)
+```
+a prefixed lowercase hexadecimal number,
+```{r}
+fmt(48879, "#x")
+```
+a number grouped by thousands with two-significant digits,
+```{r}
+fmt(4223, ",.2r")
+```
+
+The `locale` argument supports localization of groupings, decimal marks, numerals,
+```{r}
+x <- 12345678910.12
+fmt(x, "$,.2f", locale = "en-US")
+fmt(x, "$,.2f", locale = "en-GB")
+fmt(x, "$,.2f", locale = "en-IN")
+fmt(x, "$,.2f", locale = "fr-FR")
+fmt(x, "$,.2f", locale = "ar-SA")
+fmt(x, "$,.2f", locale = "zh-CN")
+fmt(x, "$,.2f", locale = "ja-JP")
+```
+
+
+The available default locales are in the `fmt_locales`.
+The default locales are those provided by the [d3-format](https://github.com/d3/d3-format) Javascript library.
+
+The `si` argument can be used to apply a common SI-prefix to all the values.
+```{r}
+fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
+```
+
+Formats can be saved as a function to be reused,
+```{r}
+formatter <- fmt_new(",.2f")
+formatter(c(1, 100, 1000, 1050, 1.50))
+formatter(rnorm(5))
+```
+
+Formats 

@@ -52,16 +52,16 @@ test_that("format(as_fmt_spec(specifier)) reflects current field values", {
   expect_equal(format(s), "_^+$")
   s$align <- "="
   s$fill <- "0"
-  expect_equal(format(s), "_^+$0")
+  expect_equal(format(s), "0=+$")
   s$width <- 12
-  expect_equal(format(s), "_^+$012")
+  expect_equal(format(s), "0=+$12")
   s$comma <- TRUE
-  expect_equal(format(s), "_^+$012,")
+  expect_equal(format(s), "0=+$12,")
   s$precision <- 2
-  expect_equal(format(s), "_^+$012,.2")
+  expect_equal(format(s), "0=+$12,.2")
   s$type <- "f"
-  expect_equal(format(s), "_^+$012,.2f")
-  # expect_equal(fmt(s), "+$0,000,042.00")
+  expect_equal(format(s), "0=+$12,.2f")
+  expect_equal(fmt_new(s)(42), "+$0,000,042.00")
 })
 
 test_that("format(as_fmt_spec(specifier)) clamps precision to zero", {
