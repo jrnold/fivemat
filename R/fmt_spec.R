@@ -51,12 +51,25 @@ fmt_prefix_auto <- function(x, p) {
   out
 }
 
+int2bin <- function(x) {
+  if (x == 0) {
+    "0"
+  } else {}
+  out <- rev(as.integer(intToBits(x)))
+  i <- purrr::detect_index(out, as.logical)
+  str_c(out[seq(i, length(out), by = 1)], collapse = "")
+}
+
+fmt_bin <- function(x) {
+  map_chr(x, int2bin)
+}
+
 fmt_types <- list(
   "%" = function(x, p) formatC(x * 100, format = "f", digits = p),
   # a and A are from R sprintf
   "a" = function(x, p) str_sub(sprintf(paste0("%.", p, "a"), x), 3),
   "A" = function(x, p) str_sub(sprintf(paste0("%.", p, "A"), x), 3),
-  "b" = function(x, p) as.character(R.utils::intToBin(round(x))),
+  "b" = function(x, p) fmt_bin(round(x)),
   "c" = function(x, p) base::as.character(x),
   "d" = function(x, p) as.character(round(x)),
   "e" = function(x, p) formatC(x, format = "e", digits = p),

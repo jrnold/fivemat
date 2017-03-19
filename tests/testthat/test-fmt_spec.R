@@ -58,7 +58,7 @@ test_that("format(as_fmt_spec(specifier)) reflects current field values", {
   s$comma <- TRUE
   expect_equal(format(s), "0=+$12,")
   s$precision <- 2
-  expect_equal(format(s), "0=+$012,.2")
+  expect_equal(format(s), "0=+$12,.2")
   s$type <- "f"
   expect_equal(format(s), "0=+$12,.2f")
   expect_equal(fmt_new(s)(42), "+$0,000,042.00")

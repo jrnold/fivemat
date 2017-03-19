@@ -6,7 +6,7 @@
 \title{Create a format locale}
 \usage{
 fmt_locale(decimal_mark = ".", grouping_mark = ",", grouping = 3,
-  currency = c("", ""), numerals = NULL)
+  currency = c("$", ""), numerals = NULL)
 
 fmt_default_locale()
 }

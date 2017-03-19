@@ -21,7 +21,7 @@
 fmt_locale <- function(decimal_mark = ".",
                        grouping_mark = ",",
                        grouping = 3,
-                       currency = c("", ""),
+                       currency = c("$", ""),
                        numerals = NULL) {
   assert_that(is.string(decimal_mark))
   assert_that(is.string(grouping_mark))

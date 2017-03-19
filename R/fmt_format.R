@@ -11,6 +11,7 @@ get_prefix <- function(x, p) {
   out
 }
 
+
 #' Format numbers
 #'
 #' The function \code{fmt_new} creates a function to format numbers using
@@ -114,6 +115,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       str_c("0x")
     }
   } else ""
+
   suffix <- if (spec$symbol %==% "$") {
     locale$currency[2]
   } else if (spec$type %==% c("%", "p")) {
@@ -158,7 +160,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     }
 
     if (spec$type %==% "c") {
-      x_suffix <- format_type(x)
+      x_suffix <- str_c(format_type(x), x_suffix)
       s <- rep("", n)
     } else {
       # Perform the initial formatting.
