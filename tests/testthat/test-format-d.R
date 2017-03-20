@@ -213,5 +213,6 @@ test_that("fmt_new(\"d\") can format negative zero as zero", {
 })
 
 test_that("fmt_new(\"d\") works with special values", {
-  expect_equal(fmt_new("d")(NA), "NA")
+  f <- fmt_new("d")
+  expect_equal(f(c(NA, NaN, Inf, -Inf)), c("NA", "NaN", "Inf", "-Inf"))
 })

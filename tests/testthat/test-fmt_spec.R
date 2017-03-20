@@ -23,15 +23,20 @@ test_that("as_fmt_spec(\"\") has the expected defaults", {
   expect_equal(s$type, NULL)
 })
 
-test_that("as_fmt_spec(specifier) uses the none type for unknown types", {
-  expect_equal(as_fmt_spec("q")$type, NULL)
-  expect_equal(as_fmt_spec("S")$type, NULL)
+test_that("as_fmt_spec(specifier) raises error for unknown types", {
+  expect_error(as_fmt_spec("q")$type, regexp = "Type .* not recognized")
 })
 
 test_that("as_fmt_spec(\"n\") is an alias for \",g\"", {
   s <- as_fmt_spec("n")
   expect_equal(s$comma, TRUE)
   expect_equal(s$type, "g")
+})
+
+test_that("as_fmt_spec(\"N\") is an alias for \",G\"", {
+  s <- as_fmt_spec("N")
+  expect_equal(s$comma, TRUE)
+  expect_equal(s$type, "G")
 })
 
 test_that("as_fmt_spec(\"0\") is an alias for \"0=\"", {

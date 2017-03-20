@@ -26,3 +26,8 @@ test_that("fmt_new(\"^%\") align center puts suffix adjacent to number", {
   expect_equal(fmt_new("^21,.0%")(422),   "       42,200%       ")
   expect_equal(fmt_new("^21,.0%")(-422),  "      -42,200%       ")
 })
+
+test_that("fmt_new(\"%\") works with special values", {
+  f <- fmt_new(".0%")
+  expect_equal(f(c(NA, NaN, Inf, -Inf)), c("NA", "NaN", "Inf", "-Inf"))
+})

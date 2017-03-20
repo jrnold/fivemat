@@ -1,4 +1,4 @@
-context("format g")
+context("formats g and G")
 
 test_that("fmt_new(\"g\") can output general notation", {
   expect_equal(fmt_new(".1g")(0.049), "0.05")
@@ -50,4 +50,14 @@ test_that("fmt_new(\",G\") can group thousands with general notation", {
   expect_equal(f(-42), "-42.0000000000")
   expect_equal(f(-4200000), "-4,200,000.00000")
   expect_equal(f(-42000000), "-42,000,000.0000")
+})
+
+test_that("fmt_new(\"g\") works with special values", {
+  expect_equal(fmt_new("g")(c(-Inf, Inf, NA, NaN)),
+               c("-Inf", "Inf", "NA", "NaN"))
+})
+
+test_that("fmt_new(\"G\") works with special values", {
+  expect_equal(fmt_new("G")(c(-Inf, Inf, NA, NaN)),
+               c("-Inf", "Inf", "NA", "NaN"))
 })

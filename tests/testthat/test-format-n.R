@@ -25,3 +25,8 @@ test_that("fmt_new(\"n\") uses zero padding", {
   expect_equal(fmt_new("021.0n")(0), "0,000,000,000,000,000")
   expect_equal(fmt_new("013.8n")(-42000000), "-0,042,000,000")
 })
+
+test_that("fmt_new(\"n\") works with special values", {
+  expect_equal(fmt_new("g")(c(-Inf, Inf, NA, NaN)),
+               c("-Inf", "Inf", "NA", "NaN"))
+})

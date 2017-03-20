@@ -40,7 +40,8 @@ symbols for decimal points, group (thousands) seperator, group sizes, currency s
 and numerals to be used in formatting numbers.
 }
 \details{
-The function `fmt_default_locale` gets the default locale.
-The defaults are chosen to match R (i.e. US English), but without currency symbols.
+The function `fmt_default_locale` returns the default locale.
+The defaults are chosen to match R (i.e. US English).
+
 The default locale is set with the option, `fivemat.fmt_default_locale`.
 }

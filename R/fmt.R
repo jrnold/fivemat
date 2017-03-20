@@ -195,7 +195,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
       # If a negative value rounds to zero during formatting, treat as positive.
       is_zero <- rep(FALSE, n)
       is_zero[fin] <- if (test_types(spec$type,
-                                     c("%", "a", "A", "d", "e", "E",
+                                     c("%", "d", "e", "E",
                                        "f", "g", "G", "p", "r", "s"), TRUE)) {
         as.numeric(string[fin]) == 0
       } else if (test_types(spec$type, c("x", "X"))) {
@@ -204,6 +204,8 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
         strtoi(string[fin], base = 8L) == 0
       } else if (test_types(spec$type, c("b"))) {
         strtoi(string[fin], base = 2L) == 0
+      } else if (test_types(spec$type, c("a", "A"))) {
+        as.numeric(str_c("0x", string[fin])) == 0
       }
       neg_x <- neg_x & !is_zero
     }

@@ -42,10 +42,6 @@ test_that("fmt_new(\"f\") can format negative zero as zero", {
   expect_equal(fmt_new("f")(-1e-12), "0.000000")
 })
 
-test_that("fmt_new(\"f\") can format negative infinity", {
-  expect_equal(fmt_new("f")(-Inf), "-Inf")
-})
-
-test_that("fmt_new(\",f\") does not group Infinity", {
-  expect_equal(fmt_new(",f")(Inf), "Inf")
+test_that("fmt_new(\"f\") can format special values", {
+  expect_equal(fmt_new("f")(c(NA, NaN, Inf, -Inf)), c("NA", "NaN", "Inf", "-Inf"))
 })

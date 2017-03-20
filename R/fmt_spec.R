@@ -81,11 +81,11 @@ fmt_b <- function(x, p) map_chr(round(x), int2bin)
 
 fmt_d <- function(x, p) sprintf_("d")(round(x))
 
-fmt_g <- function(x, p) {
+fmt_g <- function(x, p, upper = FALSE) {
   x <- signif(x, p)
   k <- exponent(x)
   if_else(k < -4 | k >= p,
-          sprintf_("e")(x, p - 1L),
+          sprintf_(if (upper) "E" else "e")(x, p - 1L),
           sprintf_("f")(x, p - k - 1L))
 }
 
@@ -100,8 +100,8 @@ fmt_types <- list(
   "e" = sprintf_("e"),
   "E" = sprintf_("E"),
   "f" = sprintf_("f"),
-  "g" = fmt_g,
-  "G" = function(x, p) stringr::str_to_upper(fmt_g(x, p)),
+  "g" = function(x, p) fmt_g(x, p, FALSE),
+  "G" = function(x, p) fmt_g(x, p, TRUE),
   "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
   "p" = function(x, p) fmt_rounded(x * 100, p),
   "r" = fmt_rounded,
@@ -286,10 +286,11 @@ fmt_spec <- function(fill = " ",
     if (res$type == "n") {
       res$comma <- TRUE
       res$type <- "g"
+    } else if (type == "N") {
+      res$comma <- TRUE
+      res$type <- "G"
     } else if (!type %in% names(fmt_types)) {
-      # Map invalid types to the default format.
-      # Use something else for default?
-      res[["type"]] <- NULL
+      stop("Type `\"", type, "\" is not recognized.", call. = FALSE)
     }
   }
   # If zero fill is specified, padding goes after sign and before digits.
