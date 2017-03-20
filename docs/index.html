@@ -58,6 +58,7 @@
 <div id="fivemat-better-formatting-for-r" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#fivemat-better-formatting-for-r" class="anchor"> </a>fivemat: Better formatting for R</h1></div>
+
 <p>The <strong>fivemat</strong> package provides better formatting for R numbers. It has similar functionality to the base R functions <code>sprintf</code>, <code>prettyNum</code> and <code>formatC</code>, but with more features and support for locales.</p>
 <p>This package is primarily a port of the Javascript library <a href="https://github.com/d3/d3-format/blob/master/README.md">d3-format</a>.</p>
 <div id="installation" class="section level2">
@@ -162,7 +163,7 @@ devtools::<span class="kw">install_github</span>(<span class="st">"jrnold/fivema
 <span class="kw">formatter</span>(<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">1000</span>, <span class="dv">1050</span>, <span class="fl">1.50</span>))</code></pre></div>
 <pre><code>## [1] "1.00"     "100.00"   "1,000.00" "1,050.00" "1.50"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">formatter</span>(<span class="kw">rnorm</span>(<span class="dv">5</span>))</code></pre></div>
-<pre><code>## [1] "-2.27" "2.68"  "-0.36" "0.21"  "1.07"</code></pre>
+<pre><code>## [1] "0.59"  "0.71"  "-0.11" "-0.45" "0.61"</code></pre>
 <p>This makes it easy to use as a formatter with <code>ggplot2</code> scales:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">"ggplot2"</span>)
 df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
@@ -172,13 +173,13 @@ df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
 p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(x, y)) +<span class="st"> </span><span class="kw">geom_point</span>()
 p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".1%"</span>)) +
 <span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672"></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">"$.2f"</span>)) +
 <span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>, <span class="st">"fr-FR"</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-12-2.png" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-13-2.png" width="672"></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".2f"</span>)) +
-<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">"s"</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-12-3.png" width="672"></p>
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".0s"</span>))</code></pre></div>
+<p><img src="index_files/figure-html/unnamed-chunk-13-3.png" width="672"></p>
 </div>
 <div id="si-prefixes" class="section level3">
 <h3 class="hasAnchor">
@@ -206,6 +207,12 @@ p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span cla
 <ul class="list-unstyled">
 <li>Jeffrey Arnold <br><small class="roles"> Author, maintainer </small> </li>
 </ul>
+<html><body>
+<h2>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://travis-ci.org/jrnold/fivemat"><img src="https://travis-ci.org/jrnold/fivemat.svg?branch=master" alt="Travis-CI Build Status"></a></li>
+</ul>
+</body></html>
 </div>
 
 </div>

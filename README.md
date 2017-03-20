@@ -1,6 +1,9 @@
 fivemat: Better formatting for R
 ================================
 
+[![Travis-CI Build
+Status](https://travis-ci.org/jrnold/fivemat.svg?branch=master)](https://travis-ci.org/jrnold/fivemat)
+
 The **fivemat** package provides better formatting for R numbers. It has
 similar functionality to the base R functions `sprintf`, `prettyNum` and
 `formatC`, but with more features and support for locales.
@@ -166,6 +169,10 @@ Formats can be saved as a function to be reused,
 This makes it easy to use as a formatter with `ggplot2` scales:
 
     library("ggplot2")
+
+    ## Need help? Try the ggplot2 mailing list:
+    ## http://groups.google.com/group/ggplot2.
+
     df <- data.frame(
       x = rnorm(10) * 100000,
       y = seq(0, 1, length.out = 10)
@@ -174,17 +181,17 @@ This makes it easy to use as a formatter with `ggplot2` scales:
     p + scale_y_continuous(labels = fmt_new(".1%")) +
       scale_x_continuous(labels = fmt_new(","))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
     p + scale_y_continuous(labels = fmt_new("$.2f")) +
       scale_x_continuous(labels = fmt_new(",", "fr-FR"))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-14-2.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-2.png)
 
     p + scale_y_continuous(labels = fmt_new(".2f")) +
       scale_x_continuous(labels = fmt_new(".0s"))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-14-3.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-3.png)
 
 ### SI Prefixes
 
