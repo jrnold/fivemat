@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Format numbers — fmt_new • fivemat</title>
+<title>Suggested precision for rounded significant digit formats — precision_round • fivemat</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -71,64 +71,61 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Format numbers</h1>
+    <h1>Suggested precision for rounded significant digit formats</h1>
     </div>
 
     
-    <p>The function <code>fmt_new</code> creates a function to format numbers using
-a given <code>locale</code> and <code>spec</code>. The function <code>fmt</code> formats
-numbers, and is a convenience function for <code>fmt_new(...)(x)</code>.</p>
+    <p>The function <code>precision_round_</code> takes the maximum absolute distance
+between values, (<code>step</code>), and the maximum absolute value, (<code>value</code>),
+of the values to be formatted, and returns the suggested precision for
+formats that round to significant digits (e.g. <code>&quot;g&quot;</code>).
+<code>precision_round</code> calculates this precision given a numeric vector of
+values to format, <code>x</code>.</p>
     
 
-    <pre><span class='fu'>fmt_new</span>(<span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+    <pre><span class='fu'>precision_round</span>(<span class='no'>x</span>)
 
-<span class='fu'>fmt</span>(<span class='no'>x</span>, <span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>precision_round_</span>(<span class='no'>step</span>, <span class='no'>xmax</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <dl class="dl-horizontal">
-      <dt>spec</dt>
-      <dd>A <code><a href='as_fmt_spec.html'>fmt_spec</a></code> object, or a string coerced to a
-<code>fmt_spec</code> object using <code><a href='as_fmt_spec.html'>as_fmt_spec</a></code>, or a list of
-arguments passed to <code>fmt_spec</code>.</dd>
-      <dt>locale</dt>
-      <dd>A <code><a href='fmt_locale.html'>fmt_locale</a></code> object.</dd>
-      <dt>si_prefix</dt>
-      <dd>If non-<code>NULL</code>, then use
-an <a href = 'SI prefix'>https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes</a> to format <code>x</code>.
-If <code>TRUE</code>, then use <code>precision_prefix</code> to automatically determine
-the SI prefix to use. Otherwise, it can be any of the valid arguments
-for <code><a href='si_prefix.html'>si_prefix</a></code>: a string with the prefix name, an integer with the
-SI prefix exponent, or a numeric value.
-Unlike the <code>&quot;s&quot;</code> format type, this applies the same
-prefix to all values in <code>x</code>, rather than determining the SI-prefix
-on a value by value basis. Additionally, a non-<code>NULL</code> <code>si</code> implies
-a <code>&quot;f&quot;</code> format type, in which <code>precision</code> represents the number of
-digits past the decimal point.</dd>
       <dt>x</dt>
-      <dd>A numeric or integer vector</dd>
-      <dt>...</dt>
-      <dd>Arguments passed to <code>fmt_new</code>.</dd>
+      <dd>A numeric vector of values to be formatted.</dd>
+      <dt>step</dt>
+      <dd>Numeric: Minimum absolute difference between values that will be formatted.</dd>
+      <dt>xmax</dt>
+      <dd>Numeric: Maximum absolute value of the values to be formatted.</dd>
     </dl>
+    
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
+
+    <p>The <code>d3-format</code> function <a href = 'precisionRound'>https://github.com/d3/d3-format/blob/master/src/precisionRound.js</a></p>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>fmt_new</code> returns a function with a single argument.
-   <code>fmt</code> returns a function of the same length as <code>x</code> of
-   formatted numbers.</p>
+    <p>An integer vector of suggest precisions. For <code>precision_fixed</code>,
+   this is length one, for <code>precision_fixed_</code> it is the same length
+   as <code>step</code>.</p>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <p><code><a href='precision_fixed.html'>precision_fixed</a></code> for the suggested precision to
+  use with formats that use a fixed number of digits after the decimal point,
+  and <code><a href='precision_prefix.html'>precision_prefix</a></code> for a suggested SI prefix to use.</p>
     
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>fmt</span>(<span class='fu'>c</span>(<span class='fl'>0.00042</span>, <span class='fl'>0.0042</span>), <span class='kw'>spec</span> <span class='kw'>=</span> <span class='st'>",.0"</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='fl'>1e-6</span>)</div><div class='output co'>#&gt; [1] &quot;420μ&quot;   &quot;4,200μ&quot;</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
+      <li><a href="#source">Source</a></li>
+
       <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
+
+      <li><a href="#see-also">See also</a></li>
+          </ul>
 
   </div>
 </div>

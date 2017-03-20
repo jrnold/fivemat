@@ -54,7 +54,12 @@
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/jrnold/fivemat">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -76,7 +81,8 @@ and numerals to be used in formatting numbers.</p>
     
 
     <pre><span class='fu'>fmt_locale</span>(<span class='kw'>decimal_mark</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>grouping_mark</span> <span class='kw'>=</span> <span class='st'>","</span>, <span class='kw'>grouping</span> <span class='kw'>=</span> <span class='fl'>3</span>,
-  <span class='kw'>currency</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>""</span>, <span class='st'>""</span>), <span class='kw'>numerals</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+  <span class='kw'>currency</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"$"</span>, <span class='st'>""</span>), <span class='kw'>numerals</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>inf_mark</span> <span class='kw'>=</span> <span class='st'>"Inf"</span>,
+  <span class='kw'>na_mark</span> <span class='kw'>=</span> <span class='st'>"NA"</span>, <span class='kw'>nan_mark</span> <span class='kw'>=</span> <span class='st'>"NaN"</span>)
 
 <span class='fu'>fmt_default_locale</span>()</pre>
     
@@ -95,6 +101,12 @@ and numerals to be used in formatting numbers.</p>
 If named, the names must be `&quot;0&quot;`, ..., `&quot;9&quot;`. If not named, then the
 vector is assumed to be ordered 0 to 9; e.g. `numerals[1]` is the numeral
 for &quot;0&quot;, `numerals[2]` is the numeral for &quot;1&quot; and so on.</dd>
+      <dt>inf_mark</dt>
+      <dd>Character: Mark to use for infinity (<code>Inf</code>).</dd>
+      <dt>na_mark</dt>
+      <dd>Character: Mark to use for missing values, (<code>NA</code>).</dd>
+      <dt>nan_mark</dt>
+      <dd>Character: Mark to use for not-a-number values, (<code>NaN</code>).</dd>
     </dl>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -103,9 +115,9 @@ for &quot;0&quot;, `numerals[2]` is the numeral for &quot;1&quot; and so on.</dd
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The function `fmt_default_locale` gets the default locale.
-The defaults are chosen to match R (i.e. US English), but without currency symbols.
-The default locale is set with the option, `fivemat.fmt_default_locale`.</p>
+    <p>The function `fmt_default_locale` returns the default locale.
+The defaults are chosen to match R (i.e. US English).</p>
+    <p>The default locale is set with the option, `fivemat.fmt_default_locale`.</p>
     
 
   </div>

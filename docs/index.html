@@ -32,7 +32,14 @@
   <a href="reference/index.html">Reference</a>
 </li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="https://github.com/jrnold/fivemat">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
 </div>
 <!--/.nav-collapse -->
   </div>
@@ -60,12 +67,6 @@
 <p><strong>fivemat</strong> is not on CRAN, you can install the development version from github with</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install.packages("devtools")</span>
 devtools::<span class="kw">install_github</span>(<span class="st">"jrnold/fivemat"</span>)</code></pre></div>
-<pre><code>## Using GitHub PAT from envvar GITHUB_PAT</code></pre>
-<pre><code>## Downloading GitHub repo jrnold/fivemat@master
-## from URL https://api.github.com/repos/jrnold/fivemat/zipball/master</code></pre>
-<pre><code>## Installing fivemat</code></pre>
-<pre><code>## '/Library/Frameworks/R.framework/Resources/bin/R' CMD INSTALL '/private/var/folders/p9/s8k5mgx92cxfb6zgn8jlnz580000gn/T/RtmpAAYlAG/devtools1a5d50e87890/jrnold-fivemat-0d6410ad9a7b53f7c0b39ac25dc5c42cb9869be7'</code></pre>
-<pre><code>## Reloading installed fivemat</code></pre>
 </div>
 <div id="usage" class="section level1">
 <h1 class="hasAnchor">
@@ -87,31 +88,64 @@ devtools::<span class="kw">install_github</span>(<span class="st">"jrnold/fivema
 <p>a dot-filled and centered number,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="dv">42</span>, <span class="st">".^20"</span>)</code></pre></div>
 <pre><code>## [1] ".........42........."</code></pre>
-<p>a SI-prefixed number with two significant digits,</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">42e6</span>, <span class="st">".2s"</span>)   <span class="co"># SI-prefix with two significant digits, "42M"</span></code></pre></div>
-<pre><code>## [1] "42M"</code></pre>
+<p>SI-prefixed numbers with two significant digits,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">1.23</span> *<span class="st"> </span><span class="dv">10</span> ^<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">24</span>, <span class="dv">24</span>, <span class="dt">by =</span> <span class="dv">1</span>), <span class="st">",.2s"</span>)</code></pre></div>
+<pre><code>##  [1] "1.2y"   "12y"    "1,200y" "1.2z"   "12z"    "1,200z" "1.2a"  
+##  [8] "12a"    "1,200a" "1.2f"   "12f"    "1,200f" "1.2p"   "12p"   
+## [15] "1,200p" "1.2n"   "12n"    "1,200n" "1.2μ"   "12μ"    "1,200μ"
+## [22] "1.2m"   "12m"    "1,200m" "1.2 "   "12 "    "1,200 " "1.2k"  
+## [29] "12k"    "1,200k" "1.2M"   "12M"    "1,200M" "1.2G"   "12G"   
+## [36] "1,200G" "1.2T"   "12T"    "1,200T" "1.2P"   "12P"    "1,200P"
+## [43] "1.2E"   "12E"    "1,200E" "1.2Z"   "12Z"    "1,200Z" "1.2Y"</code></pre>
+<p>SI-prefixed numbers with one digit after the decimal point and a common SI-prefix,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">1.23</span> *<span class="st"> </span><span class="dv">10</span> ^<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">24</span>, <span class="dv">24</span>, <span class="dt">by =</span> <span class="dv">1</span>), <span class="st">".1"</span>, <span class="dt">si =</span> <span class="fl">1e3</span>)</code></pre></div>
+<pre><code>##  [1] "0.0k"                      "0.0k"                     
+##  [3] "0.0k"                      "0.0k"                     
+##  [5] "0.0k"                      "0.0k"                     
+##  [7] "0.0k"                      "0.0k"                     
+##  [9] "0.0k"                      "0.0k"                     
+## [11] "0.0k"                      "0.0k"                     
+## [13] "0.0k"                      "0.0k"                     
+## [15] "0.0k"                      "0.0k"                     
+## [17] "0.0k"                      "0.0k"                     
+## [19] "0.0k"                      "0.0k"                     
+## [21] "0.0k"                      "0.0k"                     
+## [23] "0.0k"                      "0.0k"                     
+## [25] "0.0k"                      "0.0k"                     
+## [27] "0.1k"                      "1.2k"                     
+## [29] "12.3k"                     "123.0k"                   
+## [31] "1230.0k"                   "12300.0k"                 
+## [33] "123000.0k"                 "1230000.0k"               
+## [35] "12300000.0k"               "123000000.0k"             
+## [37] "1230000000.0k"             "12300000000.0k"           
+## [39] "123000000000.0k"           "1230000000000.0k"         
+## [41] "12300000000000.0k"         "123000000000000.0k"       
+## [43] "1230000000000000.0k"       "12300000000000000.0k"     
+## [45] "123000000000000000.0k"     "1230000000000000000.0k"   
+## [47] "12300000000000000000.0k"   "122999999999999983616.0k" 
+## [49] "1230000000000000000000.0k"</code></pre>
 <p>a prefixed lowercase hexadecimal number,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="dv">48879</span>, <span class="st">"#x"</span>)</code></pre></div>
 <pre><code>## [1] "0xbeef"</code></pre>
 <p>a number grouped by thousands with two-significant digits,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="dv">4223</span>, <span class="st">",.2r"</span>)</code></pre></div>
-<pre><code>## [1] "4,223"</code></pre>
+<pre><code>## [1] "4,200"</code></pre>
 <p>The <code>locale</code> argument supports localization of groupings, decimal marks, numerals,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="fl">12345678910.12</span>
 <span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"en-US"</span>)</code></pre></div>
-<pre><code>## [1] "$12,345,678,910,.12.12"</code></pre>
+<pre><code>## [1] "$12,345,678,910.12"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"en-GB"</span>)</code></pre></div>
-<pre><code>## [1] "£12,345,678,910,.12.12"</code></pre>
+<pre><code>## [1] "£12,345,678,910.12"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"en-IN"</span>)</code></pre></div>
-<pre><code>## [1] "\u20b91,23,45,67,89,10,.12.12"</code></pre>
+<pre><code>## [1] "\u20b912,34,56,78,910.12"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"fr-FR"</span>)</code></pre></div>
-<pre><code>## [1] "12.345.678.910..12,12 €"</code></pre>
+<pre><code>## [1] "12.345.678.910,12 €"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"ar-SA"</span>)</code></pre></div>
-<pre><code>## [1] "١٢٬٣٤٥٬٦٧٨٬٩١٠٬.١٢٫١٢ ر.س."</code></pre>
+<pre><code>## [1] "١٢٬٣٤٥٬٦٧٨٬٩١٠٫١٢ ر.س."</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"zh-CN"</span>)</code></pre></div>
-<pre><code>## [1] "¥12,345,678,910,.12.12"</code></pre>
+<pre><code>## [1] "¥12,345,678,910.12"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(x, <span class="st">"$,.2f"</span>, <span class="dt">locale =</span> <span class="st">"ja-JP"</span>)</code></pre></div>
-<pre><code>## [1] "12,345,678,910,.12.12円"</code></pre>
+<pre><code>## [1] "12,345,678,910.12円"</code></pre>
 <p>The available default locales are in the <code>fmt_locales</code>. The default locales are those provided by the <a href="https://github.com/d3/d3-format">d3-format</a> Javascript library.</p>
 <p>The <code>si</code> argument can be used to apply a common SI-prefix to all the values.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="kw">c</span>(<span class="fl">0.00042</span>, <span class="fl">0.0042</span>), <span class="dt">spec =</span> <span class="st">",.0"</span>, <span class="dt">si =</span> <span class="fl">1e-6</span>)</code></pre></div>
@@ -119,18 +153,22 @@ devtools::<span class="kw">install_github</span>(<span class="st">"jrnold/fivema
 <p>Formats can be saved as a function to be reused,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">formatter &lt;-<span class="st"> </span><span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">",.2f"</span>)
 <span class="kw">formatter</span>(<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">1000</span>, <span class="dv">1050</span>, <span class="fl">1.50</span>))</code></pre></div>
-<pre><code>## [1] "1.00"     "100.00"   "1,000.00" "1,050.00" "1.5.50"</code></pre>
+<pre><code>## [1] "1.00"     "100.00"   "1,000.00" "1,050.00" "1.50"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">formatter</span>(<span class="kw">rnorm</span>(<span class="dv">5</span>))</code></pre></div>
-<pre><code>## [1] "0,.45,422,200,745,782.45"    "--1,.10,963,637,448,522.11" 
-## [3] "--0.,949,684,418,995,494.95" "--0.,581,115,063,970,204.58"
-## [5] "0.,422,849,556,195,346.42"</code></pre>
-<p>Formats</p>
+<pre><code>## [1] "1.15"  "-1.82" "-0.25" "-0.24" "-0.28"</code></pre>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>License</h2>
+    <h2>Links</h2>
+<ul class="list-unstyled">
+<li>Browse source code at <br><a href="https://github.com/jrnold/fivemat">https://​github.com/​jrnold/​fivemat</a>
+</li>
+<li>Report a bug at <br><a href="https://github.com/jrnold/fivemat/issues">https://​github.com/​jrnold/​fivemat/​issues</a>
+</li>
+</ul>
+<h2>License</h2>
 <p><a href="https://opensource.org/licenses/mit-license.php">MIT</a> + file <a href="LICENSE">LICENSE</a></p>
 <h2>Developers</h2>
 <ul class="list-unstyled">

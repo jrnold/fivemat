@@ -54,7 +54,12 @@
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/jrnold/fivemat">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -70,7 +75,10 @@
     </div>
 
     
-    <p>Format Specification</p>
+    <p>The function <code>fmt_spec</code> is used to create a format specification object
+which describes how a number is to be formatted.
+The function <code>as_fmt_spec</code> parses a string with a concise representation of
+the specification into a <code>fmt_spec</code> object.</p>
     
 
     <pre><span class='fu'>as_fmt_spec</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'>character</span>())
@@ -120,10 +128,11 @@
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>as_fmt_spec()</code> returns a <code>fmt_spec</code> object for the given string <code>specifier</code>.
-The returned function takes a number as the only argument, and returns a string representing the formatted number.
+    <p>The returned function takes a number as the only argument, and returns a string representing the formatted number.
 The general form of a specifier is:
-<code>[[fill]align][sign][symbol][0][width][,][.precision][type]</code></p>
+<code>
+ [[fill]align][sign][symbol][0][width][,][.precision][type]
+</code></p>
     <p>The <code>fill</code> can be any character. The presence of a fill character is signaled by the *align* character following it, which must be one of the following:
 <ul>
 <li><code>&gt;</code>: Forces the field to be right-aligned within the available space.
@@ -137,59 +146,73 @@ The general form of a specifier is:
 </ul></p>
     <p>The <code>sign</code> can be:
 <ul>
-<li><code>&quot;-} : nothing for positive and a minus sign for negative. (Default behavior.)}
-\item{\code{&quot;+&quot;} : a plus sign for positive and a minus sign for negative.}
-\code{{&quot;(&quot;} : nothing for positive and parentheses for negative.}
-\code{{&quot; &quot;} (space) : a space for positive and a minus sign for negative.}
-}</p>
-    <p>The \code{symbol} can be:
-\itemize{
-\item{\code{&quot;$&quot;}: apply currency symbols per the locale definition.}
-\item{\code{&quot;#&quot;</code>: for binary, octal, or hexadecimal notation, prefix by <code>&quot;0b&quot;</code>, <code>&quot;0o&quot;</code>, or <code>&quot;0x&quot;</code>, respectively.
+<li><code>&quot;-&quot;</code> : nothing for positive and a minus sign for negative. (Default behavior.)
+</li>
+<li><code>&quot;+&quot;</code> : a plus sign for positive and a minus sign for negative.
+<code>{&quot;(&quot;} : nothing for positive and parentheses for negative.</code>
+<code>{&quot; &quot;} (space) : a space for positive and a minus sign for negative.</code>
 </li>
 </ul></p>
-    <p>The <code>zero</code> (<code>0</code>) option enables zero-padding; this implicitly sets <code>fill</code> to <code>&quot;0&quot;</code> and <code>align</code> to <code>&quot;=&quot;</code>.
-The <code>width</code> defines the minimum field width; if not specified, then the width will be determined by the content.
-The <code>comma</code> (<code>,</code>) option enables the use of a group separator, such as a comma for thousands.</p>
-    <p>Depending on the <code>type</code>, the <code>precision</code> either indicates the number of digits that follow the decimal point (<code>&quot;f&quot;</code>, <code>&quot;%&quot;</code>), or the number of significant digits (<code>NULL</code>, &quot;e&quot;`, `&quot;g&quot;`, `&quot;r&quot;`, `&quot;s&quot;`, `&quot;p&quot;`).
+    <p>The <code>symbol</code> can be:
+<ul>
+<li><code>&quot;$&quot;</code>: Apply currency symbols as per the <code>locale</code>.
+</li>
+<li><code>&quot;#&quot;</code>: The behavior epends on the <code>type</code>:
+  <ul>
+<li><code>&quot;b&quot;</code>: Prefix with <code>&quot;0b&quot;</code>.
+  </li>
+<li><code>&quot;o&quot;</code>: Prefix with <code>&quot;0o&quot;</code>.
+  </li>
+<li><code>&quot;x&quot;</code>, <code>&quot;X&quot;</code>, code&quot;a&quot;, <code>&quot;A&quot;</code>: Prefix with <code>&quot;0x&quot;</code>.
+  </li>
+</ul></p>
+    <p></li>
+</ul></p>
+    <p>The <code>zero</code> (<code>0</code>) option enables zero-padding; this implicitly sets <code>fill</code> to <code>&quot;0&quot;</code> and <code>align</code> to <code>&quot;=&quot;</code>.</p>
+    <p>The <code>width</code> defines the minimum field width; if not specified, then the width will be determined by the content.</p>
+    <p>The <code>comma</code> (<code>&quot;,&quot;</code>) option enables the use of a group separator,
+such as a comma for thousands. The grouping mark and intervals are specified
+by the <code>locale</code>.</p>
+    <p>Depending on the <code>type</code>, the <code>precision</code> either indicates the number of digits that follow the decimal point (<code>&quot;f&quot;</code>, <code>&quot;%&quot;</code>), or the number of significant digits (<code>NULL</code>, <code>&quot;a&quot;</code>, <code>&quot;e&quot;</code>, <code>&quot;g&quot;</code>, <code>&quot;r&quot;</code>, <code>&quot;s&quot;</code>, <code>&quot;p&quot;</code>).
 If the precision is not specified, it defaults to 6 for all types except <code>NULL</code>, which defaults to 12.
-Precision is ignored for integer formats (types <code>&quot;b&quot;</code>, <code>&quot;o&quot;</code>, <code>&quot;d&quot;</code>, <code>&quot;x&quot;</code>, <code>&quot;X&quot;</code> and <code>&quot;c&quot;</code>).
-See <code><a href='precision_fixed.html'>precision_fixed</a></code> and <code><a href='precision_fixed.html'>precision_round</a></code> for help picking an appropriate precision.</p>
+The recision is ignored for integer formats (types <code>&quot;b&quot;</code>, <code>&quot;o&quot;</code>, <code>&quot;d&quot;</code>, <code>&quot;x&quot;</code>, <code>&quot;X&quot;</code> and <code>&quot;c&quot;</code>).
+See <code><a href='precision_fixed.html'>precision_fixed</a></code> and <code><a href='precision_round.html'>precision_round</a></code> for help picking an appropriate precision.</p>
     <p>The available <code>type</code> values are:
 <ul>
-<li> <code>&quot;e&quot;</code> - exponent notation.
+<li><code>NULL</code>: The default format. It is similar to <code>&quot;g&quot;</code>, but insignificant trailing zeros are trimmed.
 </li>
-<li> <code>&quot;f&quot;</code> - fixed point notation.
+<li><code>&quot;a&quot;</code>,<code>&quot;A&quot;</code>: Double precision values in binary notation of the form <code>h.hhhp[+-]d</code>. This is a binary fraction expressed in hex and multiplied by a decimal power of 2. The number of hex digits after the  decimal point is specified by the precision.
 </li>
-<li> <code>&quot;g&quot;</code> - either decimal or exponent notation, rounded to significant digits.
+<li><code>&quot;b&quot;</code>: Integer values in binary notation.
 </li>
-<li> <code>&quot;r&quot;</code> - decimal notation, rounded to significant digits.
+<li><code>&quot;c&quot;</code>: Convert to character using <code>as.character</code>.
 </li>
-<li> <code>&quot;s&quot;</code> - decimal notation with an [SI prefix](#locale_formatPrefix), rounded to significant digits.
+<li><code>&quot;d&quot;</code>: Integer values in decimal notation.
 </li>
-<li> <code>&quot;%&quot;</code> - multiply by 100, and then decimal notation with a percent sign.
+<li><code>&quot;e&quot;</code>,<code>&quot;E&quot;</code>: Double precision value in exponential notation of the form <code>m.dde[+-]xx</code> or <code>m.ddE[+-]xx</code>.
 </li>
-<li> <code>&quot;p&quot;</code> - multiply by 100, round to significant digits, and then decimal notation with a percent sign.
+<li><code>&quot;f&quot;</code>: Double precision value in fixed point decimal notation in the form <code>mmm.ddd</code>. The number of decimal palcaes is specified by the precision.
 </li>
-<li> <code>&quot;b&quot;</code> - binary notation, rounded to integer.
+<li><code>&quot;g&quot;</code>,<code>&quot;G&quot;</code>: Double precision value in the either fixed point (<code>&quot;f&quot;</code>) or exponential (<code>&quot;e&quot;</code>) notation, rounded to significant digits, specified by the precision. Fixed point is used if precision is less than 4, or the exopnent is greater than or equal to the precision. Trailing zeros are not dropped.
 </li>
-<li> <code>&quot;o&quot;</code> - octal notation, rounded to integer.
+<li><code>&quot;n&quot;</code>: Shorthand for <code>&quot;,g&quot;</code>.
 </li>
-<li> <code>&quot;d&quot;</code> - decimal notation, rounded to integer.
+<li><code>&quot;o&quot;</code>: Integer values in octal notation.
 </li>
-<li> <code>&quot;x&quot;</code> - hexadecimal notation, using lower-case letters, rounded to integer.
+<li><code>&quot;p&quot;</code>: Multiplied by 100, rounded to significant digits, and then formatted with <code>&quot;f&quot;</code> and a percent sign (<code>&quot;%&quot;</code>) suffix.
 </li>
-<li> <code>&quot;X&quot;</code> - hexadecimal notation, using upper-case letters, rounded to integer.
+<li><code>&quot;r&quot;</code>:  Decimal notation, but rounded to significant digits.
 </li>
-<li> <code>&quot;c&quot;</code> - converts the integer to the corresponding unicode character before printing.
+<li><code>&quot;s&quot;</code>:  Decimal notation (<code>&quot;f&quot;</code>) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.
 </li>
-<li> <code>NULL</code> - like <code>&quot;g&quot;</code>, but trim insignificant trailing zeros.
+<li><code>&quot;u&quot;</code>: Integer values converted to its unicode character.
+</li>
+<li><code>&quot;%&quot;</code>: Multiplied by 100, and then formatted with decimal notation (<code>&quot;f&quot;</code>) and a percent sign (<code>&quot;%&quot;</code>) suffix.
+</li>
+<li><code>&quot;x&quot;</code>, <code>&quot;X&quot;</code>: Hexadecimal notation, rounded to integer. <code>&quot;x&quot;</code> uses lower-case letters, and <code>&quot;X&quot;</code>, upper-case letters.
 </li>
 </ul></p>
-    <p>The type <code>n</code> is also supported as shorthand for <code>,g</code>.</p>
-    <p>For the <code>&quot;g&quot;</code>, <code>&quot;n&quot;</code> and <code>NULL</code> (none) types, decimal notation is used if the resulting string would
-have <code>precision</code> or fewer digits; otherwise,
-an exponent notation is used.</p>
+    <p>Note that these formats are not the same as those in <code><a href='http://www.rdocumentation.org/packages/base/topics/sprintf'>sprintf</a></code>.</p>
     
 
   </div>

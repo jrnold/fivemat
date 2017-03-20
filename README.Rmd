@@ -9,7 +9,7 @@ This package is primarily a port  of the Javascript library [d3-format](https://
 
 **fivemat** is not on CRAN, you can install the development version 
 from github with
-```{r}
+```{r eval=FALSE}
 # install.packages("devtools")
 devtools::install_github("jrnold/fivemat")
 ```
@@ -83,5 +83,3 @@ formatter <- fmt_new(",.2f")
 formatter(c(1, 100, 1000, 1050, 1.50))
 formatter(rnorm(5))
 ```
-
-Formats 

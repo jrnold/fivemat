@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Format numbers — fmt_new • fivemat</title>
+<title>SI Prefixes — SI_PREFIXES • fivemat</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -71,61 +71,79 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Format numbers</h1>
+    <h1>SI Prefixes</h1>
     </div>
 
     
-    <p>The function <code>fmt_new</code> creates a function to format numbers using
-a given <code>locale</code> and <code>spec</code>. The function <code>fmt</code> formats
-numbers, and is a convenience function for <code>fmt_new(...)(x)</code>.</p>
+    <p>SI Prefixes</p>
     
 
-    <pre><span class='fu'>fmt_new</span>(<span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+    <pre><span class='no'>SI_PREFIXES</span></pre>
+        
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-<span class='fu'>fmt</span>(<span class='no'>x</span>, <span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+    <p>A named numeric vector of SI prefixes.
+The names are the SI prefixes, the values are the exponents,
+\(-24, -21, \dots, 0, \dots, 21, 24\).</p>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
-    <dl class="dl-horizontal">
-      <dt>spec</dt>
-      <dd>A <code><a href='as_fmt_spec.html'>fmt_spec</a></code> object, or a string coerced to a
-<code>fmt_spec</code> object using <code><a href='as_fmt_spec.html'>as_fmt_spec</a></code>, or a list of
-arguments passed to <code>fmt_spec</code>.</dd>
-      <dt>locale</dt>
-      <dd>A <code><a href='fmt_locale.html'>fmt_locale</a></code> object.</dd>
-      <dt>si_prefix</dt>
-      <dd>If non-<code>NULL</code>, then use
-an <a href = 'SI prefix'>https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes</a> to format <code>x</code>.
-If <code>TRUE</code>, then use <code>precision_prefix</code> to automatically determine
-the SI prefix to use. Otherwise, it can be any of the valid arguments
-for <code><a href='si_prefix.html'>si_prefix</a></code>: a string with the prefix name, an integer with the
-SI prefix exponent, or a numeric value.
-Unlike the <code>&quot;s&quot;</code> format type, this applies the same
-prefix to all values in <code>x</code>, rather than determining the SI-prefix
-on a value by value basis. Additionally, a non-<code>NULL</code> <code>si</code> implies
-a <code>&quot;f&quot;</code> format type, in which <code>precision</code> represents the number of
-digits past the decimal point.</dd>
-      <dt>x</dt>
-      <dd>A numeric or integer vector</dd>
-      <dt>...</dt>
-      <dd>Arguments passed to <code>fmt_new</code>.</dd>
-    </dl>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
 
-    <p><code>fmt_new</code> returns a function with a single argument.
-   <code>fmt</code> returns a function of the same length as <code>x</code> of
-   formatted numbers.</p>
+    <p><a href = 'Table of SI prefixes'>https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes</a></p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The supported SI-prefixes are:
+<ul>
+<li><code>&quot;y&quot;</code> - yocto, \(10^{-24}\)
+</li>
+<li><code>&quot;z&quot;</code> - zepto, \(10^{-21}\)
+</li>
+<li><code>&quot;a&quot;</code> - atto, \(10^{-18}\)
+</li>
+<li><code>&quot;f&quot;</code> - femto, \(10^{-15}\)
+</li>
+<li><code>&quot;p&quot;</code> - pico, \(10^{-12}\)
+</li>
+<li><code>&quot;n&quot;</code> - nano, \(10^{-9}\)
+</li>
+<li><code>&quot;µ&quot;</code> - micro, \(10^{-6}\)
+</li>
+<li><code>&quot;m&quot;</code> - milli, \(10^{-3}\)
+</li>
+<li><code>&quot; &quot;</code> - (none) \(10^0\)
+</li>
+<li><code>&quot;k&quot;</code> - kilo, \(10^3\)
+</li>
+<li><code>&quot;M&quot;</code> - mega, \(10^{6}\)
+</li>
+<li><code>&quot;G&quot;</code> - giga, \(10^{9}\)
+</li>
+<li><code>&quot;T&quot;</code> - tera, \(10^{12}\)
+</li>
+<li><code>&quot;P&quot;</code> - peta, \(10^{15}\)
+</li>
+<li><code>&quot;E&quot;</code> - exa, \(10^{18}\)
+</li>
+<li><code>&quot;Z&quot;</code> - zetta, \(10^{21}\)
+</li>
+<li><code>&quot;Y&quot;</code> - yotta, \(10^{24}\)
+</li>
+</ul></p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>fmt</span>(<span class='fu'>c</span>(<span class='fl'>0.00042</span>, <span class='fl'>0.0042</span>), <span class='kw'>spec</span> <span class='kw'>=</span> <span class='st'>",.0"</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='fl'>1e-6</span>)</div><div class='output co'>#&gt; [1] &quot;420μ&quot;   &quot;4,200μ&quot;</div></pre>
+    <pre class="examples"><div class='input'><span class='no'>SI_PREFIXES</span></div><div class='output co'>#&gt;   y   z   a   f   p   n   μ   m       k   M   G   T   P   E   Z   Y 
+#&gt; -24 -21 -18 -15 -12  -9  -6  -3   0   3   6   9  12  15  18  21  24 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
+      <li><a href="#format">Format</a></li>
+
+      <li><a href="#source">Source</a></li>
+
+      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

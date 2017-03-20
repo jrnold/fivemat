@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Format numbers — fmt_new • fivemat</title>
+<title>Lookup SI prefix — si_prefix • fivemat</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -71,54 +71,58 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Format numbers</h1>
+    <h1>Lookup SI prefix</h1>
     </div>
 
     
-    <p>The function <code>fmt_new</code> creates a function to format numbers using
-a given <code>locale</code> and <code>spec</code>. The function <code>fmt</code> formats
-numbers, and is a convenience function for <code>fmt_new(...)(x)</code>.</p>
+    <p>Lookup an SI prefix by name, by exponent (power of 10), or by value.
+For exponents or values, the best SI prefix is returned.</p>
     
 
-    <pre><span class='fu'>fmt_new</span>(<span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+    <pre><span class='fu'>si_prefix</span>(<span class='no'>x</span>)
 
-<span class='fu'>fmt</span>(<span class='no'>x</span>, <span class='kw'>spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>locale</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+<span class='co'># S3 method for character</span>
+<span class='fu'>si_prefix</span>(<span class='no'>x</span>)
+
+<span class='co'># S3 method for integer</span>
+<span class='fu'>si_prefix</span>(<span class='no'>x</span>)
+
+<span class='co'># S3 method for numeric</span>
+<span class='fu'>si_prefix</span>(<span class='no'>x</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <dl class="dl-horizontal">
-      <dt>spec</dt>
-      <dd>A <code><a href='as_fmt_spec.html'>fmt_spec</a></code> object, or a string coerced to a
-<code>fmt_spec</code> object using <code><a href='as_fmt_spec.html'>as_fmt_spec</a></code>, or a list of
-arguments passed to <code>fmt_spec</code>.</dd>
-      <dt>locale</dt>
-      <dd>A <code><a href='fmt_locale.html'>fmt_locale</a></code> object.</dd>
-      <dt>si_prefix</dt>
-      <dd>If non-<code>NULL</code>, then use
-an <a href = 'SI prefix'>https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes</a> to format <code>x</code>.
-If <code>TRUE</code>, then use <code>precision_prefix</code> to automatically determine
-the SI prefix to use. Otherwise, it can be any of the valid arguments
-for <code><a href='si_prefix.html'>si_prefix</a></code>: a string with the prefix name, an integer with the
-SI prefix exponent, or a numeric value.
-Unlike the <code>&quot;s&quot;</code> format type, this applies the same
-prefix to all values in <code>x</code>, rather than determining the SI-prefix
-on a value by value basis. Additionally, a non-<code>NULL</code> <code>si</code> implies
-a <code>&quot;f&quot;</code> format type, in which <code>precision</code> represents the number of
-digits past the decimal point.</dd>
       <dt>x</dt>
-      <dd>A numeric or integer vector</dd>
-      <dt>...</dt>
-      <dd>Arguments passed to <code>fmt_new</code>.</dd>
+      <dd>A vector</dd>
     </dl>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>fmt_new</code> returns a function with a single argument.
-   <code>fmt</code> returns a function of the same length as <code>x</code> of
-   formatted numbers.</p>
+    <p>A named character vector where values are the SI prefix exponents
+  and names are the SI prefix names, from <code><a href='SI_PREFIXES.html'>SI_PREFIXES</a></code>.</p>
+    
+    <h2 class="hasAnchor" id="methods-by-class-"><a class="anchor" href="#methods-by-class-"></a>Methods (by class)</h2>
+
+    <p><ul>
+<li> <code>character</code>: <code>x</code> are the names of the prefixes. The prefix
+mu can be referred to with its unicode value, <code>&quot;\u03BC&quot;</code>, or <code>&quot;mu&quot;</code>.
+Empty or missing values map to no strings. Invalid values return <code>NA</code>.</p>
+    <p></li>
+<li> <code>integer</code>: <code>x</code> are the exponents of the SI prefixes,
+\(-24, -21, ..., -3, 0, 3, ..., 21, 24\).</p>
+    <p></li>
+<li> <code>numeric</code>: <code>x</code> are numeric values.
+</li>
+</ul></p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>fmt</span>(<span class='fu'>c</span>(<span class='fl'>0.00042</span>, <span class='fl'>0.0042</span>), <span class='kw'>spec</span> <span class='kw'>=</span> <span class='st'>",.0"</span>, <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='fl'>1e-6</span>)</div><div class='output co'>#&gt; [1] &quot;420μ&quot;   &quot;4,200μ&quot;</div></pre>
+    <pre class="examples"><div class='input'><span class='co'># lookup by name</span>
+<span class='fu'>si_prefix</span>(<span class='fu'>c</span>(<span class='st'>"K"</span>, <span class='st'>"T"</span>, <span class='st'>"mu"</span>, <span class='st'>"\u03BC"</span>, <span class='st'>""</span>, <span class='fl'>NA</span>))</div><div class='output co'>#&gt; <span class='error'>Error in si_prefix.character(c(&quot;K&quot;, &quot;T&quot;, &quot;mu&quot;, &quot;μ&quot;, &quot;&quot;, NA)): Invalid SI Prefixes: K</span></div><div class='input'><span class='co'># lookup by exponent with integers</span>
+<span class='fu'>si_prefix</span>(<span class='fu'>c</span>(-<span class='fl'>2L</span>, -<span class='fl'>1L</span>, <span class='fl'>0L</span>, <span class='fl'>5L</span>))</div><div class='output co'>#&gt;  m  m     k 
+#&gt; -3 -3  0  3 </div><div class='input'><span class='co'># lookup by value with numeric vectors</span>
+<span class='fu'>si_prefix</span>(<span class='fu'>c</span>(-<span class='fl'>1100</span>, <span class='fl'>5</span>, <span class='fl'>1.5e8</span>))</div><div class='output co'>#&gt; k   M 
+#&gt; 3 0 6 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -126,6 +130,8 @@ digits past the decimal point.</dd>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#methods-by-class-">Methods (by class)</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

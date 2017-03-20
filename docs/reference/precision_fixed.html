@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Suggested precisions — precision_fixed • fivemat</title>
+<title>Suggested precision for fixed decimal formats — precision_fixed • fivemat</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -54,7 +54,12 @@
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/jrnold/fivemat">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -66,49 +71,49 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Suggested precisions</h1>
+    <h1>Suggested precision for fixed decimal formats</h1>
     </div>
 
     
-    <p><code>precision_prefix</code> returns a suggested decimal precision for fixed point
-notation.</p>
+    <p>Take either a numeric vector or the maximum absolute <code>step</code> size
+between values and and return a suggested decimal precision for fixed
+point formats such as <code>&quot;f&quot;</code>.</p>
     
 
     <pre><span class='fu'>precision_fixed</span>(<span class='no'>x</span>)
 
-<span class='fu'>precision_fixed_</span>(<span class='no'>step</span>)
-
-<span class='fu'>precision_round</span>(<span class='no'>x</span>)
-
-<span class='fu'>precision_round_</span>(<span class='no'>step</span>, <span class='no'>.max</span>)
-
-<span class='fu'>precision_prefix</span>(<span class='no'>x</span>, <span class='no'>value</span>)
-
-<span class='fu'>precision_prefix_</span>(<span class='no'>step</span>, <span class='no'>value</span>)</pre>
+<span class='fu'>precision_fixed_</span>(<span class='no'>step</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <dl class="dl-horizontal">
       <dt>x</dt>
-      <dd>A numeric vector</dd>
+      <dd>A numeric vector to be formatted.</dd>
       <dt>step</dt>
-      <dd>Minimum absolute difference between values that will be formatted</dd>
-      <dt>.max</dt>
-      <dd>Largest absolute value to be formatted</dd>
-      <dt>value</dt>
-      <dd>The SI prefix to be used</dd>
+      <dd>Minimum absolute difference between values that will be formatted.</dd>
     </dl>
+    
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
+
+    <p>The <code>d3-format</code> function <a href = 'precisionFixed'>https://github.com/d3/d3-format/blob/master/src/precisionFixed.js</a>.</p>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An integer vector of decimal precisions</p>
+    <p>An integer vector of suggest precisions. For <code>precision_fixed</code>,
+   this is length one, for <code>precision_fixed_</code> it is the same length
+   as <code>step</code>.</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p><code>precision_round</code> Returns a suggested decimal precision for format types
-that round to significant digits given the specified numeric <code>step</code> and
-<code>max</code> values.</p>
-    <p><code>precision_fixed</code> returns a suggested decimal precision for a
-format precision.</p>
+that round to significant digits, such as <code>&quot;g&quot;</code> and <code>&quot;r&quot;</code>.</p>
+    <p><code>precision_fixed</code> Returns a suggested SI prefix.</p>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <p><code><a href='precision_round.html'>precision_round</a></code> for the suggested precision to
+  use with formats that round to significant digits,
+  and <code><a href='precision_prefix.html'>precision_prefix</a></code> for the suggested SI prefix to use with
+  formatting.</p>
     
 
   </div>
@@ -117,9 +122,13 @@ format precision.</p>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
+      <li><a href="#source">Source</a></li>
+
       <li><a href="#value">Value</a></li>
 
       <li><a href="#details">Details</a></li>
+
+      <li><a href="#see-also">See also</a></li>
           </ul>
 
   </div>
