@@ -49,7 +49,7 @@ SI_PREFIXES <-
 #' @export
 #' @examples
 #' # lookup by name
-#' si_prefix(c("K", "T", "mu", "\u03BC", "", NA))
+#' si_prefix(c("k", "T", "mu", "\u03BC", "", NA))
 #' # lookup by exponent with integers
 #' si_prefix(c(-2L, -1L, 0L, 5L))
 #' # lookup by value with numeric vectors
