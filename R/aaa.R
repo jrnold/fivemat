@@ -52,3 +52,11 @@ names2 <- function(x) {
     out
   }
 }
+
+drop_trailing_zeros <- function(x) {
+  notna <- !is.na(x)
+  x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")
+  x
+}
+
+

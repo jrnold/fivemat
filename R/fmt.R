@@ -1,70 +1,20 @@
-#' SI Prefixes
-#'
-#' @format A named numeric vector of SI prefixes.
-#' The names are the SI prefixes, the values are the exponents,
-#' \eqn{10^{-24}, 10^{-21}, \dots, 0, \dots, 10^{24}}{10^24, 10^21, ..., 0, ..., 10^24}.
-#'
-#' @source \href{https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes}{Table of SI prefixes}
-#' @export
-#' @importFrom purrr set_names
-#' @examples
-#' SI_PREFIXES
-SI_PREFIXES <-
-  set_names(
-    seq(-24, 24, 3),
-    c("y", "z", "a", "f", "p", "n", "\u03BC", "m", " ", "k", "M", "G",
-      "T", "P", "E", "Z", "Y")
-  )
-
-STRINGS <- list("NA" = "NA", "NaN" = "NaN", "Inf" = "Inf")
-
-#' Lookup SI prefix
-#'
-#' Lookup an SI prefix by name, by exponent (power of 10), or by value.
-#' For exponents or values, the best SI prefix is returned.
-#'
-#' @param x A vector
-#' @return A named character vector where values are the SI prefix exponents
-#'   and names are the SI prefix names, from \code{\link{SI_PREFIXES}}.
-#' @export
-#' @examples
-#' # lookup by name
-#' si_prefix(c("K", "T", "mu", "\u03BC", "", NA))
-#' # lookup by exponent with integers
-#' si_prefix(c(-2L, -1L, 0L, 5L))
-#' # lookup by value with numeric vectors
-#' si_prefix(c(-1100, 5, 1.5e8))
-si_prefix <- function(x) {
-  UseMethod("si_prefix")
+#' @importFrom stringr str_sub str_length str_c
+#' @importFrom stringi stri_reverse
+#' @importFrom purrr keep map_chr is_empty
+#' @noRd
+fmt_group <- function(x, grouping = NULL, sep = ",") {
+  if (is_empty(grouping)) return(x)
+  if (is_empty(x)) return(character())
+  intvls <- rep_len(grouping, max(str_length(x)))
+  start <- cumsum(c(1L, intvls[-length(intvls)]))
+  end <- start + intvls - 1L
+  f <- function(x, start, end) {
+    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
+    res <- stri_reverse(str_c(res, collapse = sep))
+    res
+  }
+  map_chr(x, f, start = start, end = end)
 }
-
-#' @describeIn si_prefix \code{x} are the names of the prefixes. The prefix
-#'   mu can be referred to with its unicode value, \code{"\u03BC"}, or \code{"mu"}.
-#'   Empty or missing values map to no strings. Invalid values return \code{NA}.
-#' @export
-si_prefix.character <- function(x) {
-  x[is.na(x) | x == ""] <- " "
-  # allow mu to be referred to by name
-  x[x == "mu"] <- "\u03BC"
-  SI_PREFIXES[x]
-}
-
-#' @describeIn si_prefix \code{x} are the exponents of the SI prefixes,
-#'   \eqn{-24, -21, ..., -3, 0, 3, ..., 21, 24}.
-#' @export
-si_prefix.integer <- function(x) {
-  k <- x %/% 3L
-  k[k > 8L] <- 8L
-  k[k < -8L] <- -8L
-  SI_PREFIXES[8L + k + 1L]
-}
-
-#' @describeIn si_prefix \code{x} are numeric values.
-#' @export
-si_prefix.numeric <- function(x) {
-  si_prefix.integer(as.integer(exponent(abs(x))))
-}
-
 
 #' Format numbers
 #'
@@ -121,7 +71,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
   locale <- locale %||% fmt_default_locale()
   spec <- spec %||% fmt_spec()
   if (!is.null(si)) {
-    assert_that(is.number(si))
+    assert_that(is.number(si) | is.string(si))
   }
   if (!inherits(spec, "fmt_spec")) {
     if (is.character(spec)) {
@@ -153,10 +103,18 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     }
   }
 
+  # Other symbols for special
+  na_mark <- "NA"
+  inf_mark <- "Inf"
+  nan_mark <- "NaN"
+
   # If predefined SI Prefix, then type is always f
   if (!is.null(si)) {
     spec$type <- "f"
     si_prefix <- si_prefix(si)
+    if (is.na(si_prefix)) {
+      stop("`", si, "` is an invalid SI prefix", call. = FALSE)
+    }
   }
 
   prefix <- if (spec$symbol %==% "$") {
@@ -229,9 +187,9 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     } else {
       # Perform the initial formatting.
       s <- character(length(x))
-      s[is.nan(x)] <- STRINGS[["NaN"]]
-      s[is.na(x) & !is.nan(x)] <- STRINGS[["NA"]]
-      s[is.infinite(x)] <- STRINGS[["Inf"]]
+      s[is.nan(x)] <- nan_mark
+      s[is.na(x) & !is.nan(x)] <- na_mark
+      s[is.infinite(x)] <- inf_mark
       s[finite_x] <- format_type(abs(x[finite_x]), precision)
 
       # negative values
@@ -329,12 +287,12 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       s <- str_c(s, str_trim(names(si_prefix)))
     }
     s
-  }, class = "fmt")
+  }, class = c("fmt", "function"))
 }
 
 #' @export
 print.fmt <- function(x, ...) {
-  message("<fmt>\n")
+  cat("<fmt>\n")
   print(environment(x)$spec)
   print(environment(x)$locale)
   invisible(x)

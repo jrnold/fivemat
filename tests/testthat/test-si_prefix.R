@@ -3,7 +3,7 @@ context("SI prefixes")
 test_that("si_prefix.character works as expected", {
   expect_identical(si_prefix(names(SI_PREFIXES)), SI_PREFIXES)
   expect_identical(si_prefix(c("mu", "", NA)),
-                   structure(c(-6, 0, 0), .Names = c("μ", " ", " ")))
+                   structure(c(-6, 0, 0), .Names = c("\u03BC", " ", " ")))
 })
 
 test_that("si_prefix.integer works as expected", {

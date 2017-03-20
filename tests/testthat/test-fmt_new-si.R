@@ -1,0 +1,37 @@
+context("fmt_new with si")
+
+test_that("fmt_new(\"s\", si = value)(number) formats with the SI prefix appropriate to the specified value", {
+  expect_equal(fmt_new(",.0s", si = 1e-6)(.00042), "420\u03BC")
+  expect_equal(fmt_new(",.0s", si = 1e-6)(.0042), "4,200\u03BC")
+  expect_equal(fmt_new(",.3s", si = 1e-3)(.00042), "0.420m")
+
+})
+
+test_that("fmt_new(\"s\", si = value)(number) uses yocto for very small reference values", {
+  expect_equal(fmt_new(",.0s", si = 1e-27)(1e-24), "1y")
+
+})
+
+test_that("fmt_new(\"s\", value)(number) uses yotta for very small reference values", {
+  expect_equal(fmt_new(",.0s", si = 1e27)(1e24), "1Y")
+
+})
+
+test_that("fmt_new(\"$,s\", si = value)(number) formats with the specified SI prefix", {
+  f <- fmt_new(" $12,.1s", si = 1e6)
+  expect_equal(f(-42e6),  "      -$42.0M")
+  expect_equal(f(+4.2e6), "        $4.2M")
+})
+
+test_that("fmt_new(..., si = value) works with character input", {
+  f <- fmt_new(".6f", si = "k")
+  expect_equal(
+    f(c(0.001, 1, 1000)),
+    c("0.000001k", "0.001000k", "1.000000k"))
+})
+
+test_that("fmt_new(..., si = value) works with integer input", {
+  f <- fmt_new(".6f", si = 3L)
+  expect_equal(f(c(0.001, 1, 1000)),
+               c("0.000001k", "0.001000k", "1.000000k"))
+})

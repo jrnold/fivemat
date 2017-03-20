@@ -9,8 +9,6 @@ fmt_decimal <- function(x, p) {
                  exponent = as.integer(split[, 2]))
 }
 
-
-
 #' @importFrom dplyr case_when
 #' @noRd
 fmt_rounded <- function(x, p) {
@@ -31,10 +29,9 @@ fmt_default <- function(x, ...) {
   UseMethod("fmt_default")
 }
 
-fmt_default.numeric <- function(x, p, ...) sprintf_("f")(x, p)
+fmt_default.numeric <- function(x, p, ...) sprintf_("g")(x, p)
 
 fmt_default.integer <- function(x, ...) sprintf_("d")(x)
-
 
 #' @importFrom dplyr case_when
 #' @noRd
@@ -48,7 +45,7 @@ fmt_prefix_auto <- function(x, p) {
   out[fin] <-
     case_when(
       i == n ~ d$mantissa,
-      i > n ~ str_c(d$mantissa, strrep("0", i - n + 1L)),
+      i > n ~ str_c(d$mantissa, str_rep("0", i - n + 1L)),
       i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
                       str_sub(d$mantissa, i + 1L)),
       TRUE ~ str_c("0.", str_rep("0", 1L - i),
@@ -305,6 +302,6 @@ as.character.fmt_spec <- format.fmt_spec
 
 #' @export
 print.fmt_spec <- function(x, ...) {
-  message("<fmt_spec>: ", format(x, ...))
+  cat("<fmt_spec>: ", format(x, ...))
   invisible(x)
 }

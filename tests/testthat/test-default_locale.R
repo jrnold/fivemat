@@ -1,17 +1,5 @@
-# en_Us <- fmt_locale(
-#   decimal = ".",
-#   thousands = ",",
-#   grouping = c(3),
-#   currency = c("$", "")
-# )
-#
-# fr_Fr = fmt_locale(
-#   decimal = ",",
-#   thousands =  ".",
-#   grouping = c(3),
-#   currency = c("", "\u00a0€")
-# )
-#
+context("fmt_locale")
+
 # test_that("fmt_default(definition) returns the new default locale", {
 #   locale <- fmt_default(frFr)
 #   try {
