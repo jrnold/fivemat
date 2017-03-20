@@ -3,45 +3,39 @@
 \name{precision_fixed}
 \alias{precision_fixed}
 \alias{precision_fixed_}
-\alias{precision_round}
-\alias{precision_round_}
-\alias{precision_prefix}
-\alias{precision_prefix_}
-\title{Suggested precisions}
+\title{Suggested precision for fixed decimal formats}
+\source{
+The \code{d3-format} function \href{https://github.com/d3/d3-format/blob/master/src/precisionFixed.js}{precisionFixed}.
+}
 \usage{
 precision_fixed(x)
 
 precision_fixed_(step)
-
-precision_round(x)
-
-precision_round_(step, .max)
-
-precision_prefix(x, value)
-
-precision_prefix_(step, value)
 }
 \arguments{
-\item{x}{A numeric vector}
+\item{x}{A numeric vector to be formatted.}
 
-\item{step}{Minimum absolute difference between values that will be formatted}
-
-\item{.max}{Largest absolute value to be formatted}
-
-\item{value}{The SI prefix to be used}
+\item{step}{Minimum absolute difference between values that will be formatted.}
 }
 \value{
-An integer vector of decimal precisions
+An integer vector of suggest precisions. For \code{precision_fixed},
+   this is length one, for \code{precision_fixed_} it is the same length
+   as \code{step}.
 }
 \description{
-\code{precision_prefix} returns a suggested decimal precision for fixed point
-notation.
+Take either a numeric vector or the maximum absolute \code{step} size
+between values and and return a suggested decimal precision for fixed
+point formats such as \code{"f"}.
 }
 \details{
 \code{precision_round} Returns a suggested decimal precision for format types
-that round to significant digits given the specified numeric \code{step} and
-\code{max} values.
+that round to significant digits, such as \code{"g"} and \code{"r"}.
 
-\code{precision_fixed} returns a suggested decimal precision for a
-format precision.
+\code{precision_fixed} Returns a suggested SI prefix.
+}
+\seealso{
+\code{\link{precision_round}} for the suggested precision to
+  use with formats that round to significant digits,
+  and \code{\link{precision_prefix}} for the suggested SI prefix to use with
+  formatting.
 }

@@ -92,15 +92,18 @@ fmt_types <- list(
   "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
   "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
   "b" = fmt_b,
-  "c" = function(x, p) base::as.character(x),
+  "c" = function(x, p) as.character(x),
   "d" = fmt_d,
   "e" = sprintf_("e"),
+  "E" = sprintf_("E"),
   "f" = sprintf_("f"),
   "g" = fmt_g,
+  "G" = function(x, p) stringr::str_to_upper(fmt_g(x, p)),
   "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
   "p" = function(x, p) fmt_rounded(x * 100, p),
   "r" = fmt_rounded,
   "s" = fmt_prefix_auto,
+  "u" = function(x, p) intToUtf8(round(x), multiple = TRUE),
   "X" = function(x, p) sprintf_("X")(as.integer(round(x))),
   "x" = function(x, p) sprintf_("x")(as.integer(round(x)))
 )
@@ -151,6 +154,11 @@ as_fmt_spec <- function(x = character()) {
 
 #' Format Specification
 #'
+#' The function \code{fmt_spec} is used to create a format specification object
+#' which describes how a number is to be formatted.
+#' The function \code{as_fmt_spec} parses a string with a concise representation of
+#' the specification into a \code{fmt_spec} object.
+#'
 #' @param x A string representation of the spec. See Details.
 #' @param fill A string. See Details.
 #' @param align A string. See Details.
@@ -174,13 +182,12 @@ as_fmt_spec <- function(x = character()) {
 #'             default type}
 #' }
 #'
-#'
 #' @details
-#'
-#' \code{as_fmt_spec()} returns a \code{fmt_spec} object for the given string \code{specifier}.
 #' The returned function takes a number as the only argument, and returns a string representing the formatted number.
 #' The general form of a specifier is:
-#' \verb{[[fill]align][sign][symbol][0][width][,][.precision][type]}
+#' \verb{
+#'  [[fill]align][sign][symbol][0][width][,][.precision][type]
+#' }
 #'
 #' The \code{fill} can be any character. The presence of a fill character is signaled by the *align* character following it, which must be one of the following:
 #' \itemize{
@@ -192,7 +199,7 @@ as_fmt_spec <- function(x = character()) {
 #'
 #' The \code{sign} can be:
 #' \itemize{
-#' \item{\code{"-} : nothing for positive and a minus sign for negative. (Default behavior.)}
+#' \item{\code{"-"} : nothing for positive and a minus sign for negative. (Default behavior.)}
 #' \item{\code{"+"} : a plus sign for positive and a minus sign for negative.}
 #' \code{{"("} : nothing for positive and parentheses for negative.}
 #' \code{{" "} (space) : a space for positive and a minus sign for negative.}
@@ -200,41 +207,49 @@ as_fmt_spec <- function(x = character()) {
 #'
 #' The \code{symbol} can be:
 #' \itemize{
-#' \item{\code{"$"}: apply currency symbols per the locale definition.}
-#' \item{\code{"#"}: for binary, octal, or hexadecimal notation, prefix by \code{"0b"}, \code{"0o"}, or \code{"0x"}, respectively.}
+#' \item{\code{"$"}: Apply currency symbols as per the \code{locale}.}
+#' \item{\code{"#"}: The behavior epends on the \code{type}:
+#'   \itemize{
+#'   \item{\code{"b"}: Prefix with \code{"0b"}.}
+#'   \item{\code{"o"}: Prefix with \code{"0o"}.}
+#'   \item{\code{"x"}, \code{"X"}, code{"a"}, \code{"A"}: Prefix with \code{"0x"}.}
+#'   }}
 #' }
 #'
 #' The \code{zero} (\code{0}) option enables zero-padding; this implicitly sets \code{fill} to \code{"0"} and \code{align} to \code{"="}.
-#' The \code{width} defines the minimum field width; if not specified, then the width will be determined by the content.
-#' The \code{comma} (\code{,}) option enables the use of a group separator, such as a comma for thousands.
 #'
-#' Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"\%"}), or the number of significant digits (\code{NULL}, "e"`, `"g"`, `"r"`, `"s"`, `"p"`).
+#' The \code{width} defines the minimum field width; if not specified, then the width will be determined by the content.
+#'
+#' The \code{comma} (\code{","}) option enables the use of a group separator,
+#' such as a comma for thousands. The grouping mark and intervals are specified
+#' by the \code{locale}.
+#'
+#' Depending on the \code{type}, the \code{precision} either indicates the number of digits that follow the decimal point (\code{"f"}, \code{"\%"}), or the number of significant digits (\code{NULL}, \code{"a"}, \code{"e"}, \code{"g"}, \code{"r"}, \code{"s"}, \code{"p"}).
 #' If the precision is not specified, it defaults to 6 for all types except \code{NULL}, which defaults to 12.
-#' Precision is ignored for integer formats (types \code{"b"}, \code{"o"}, \code{"d"}, \code{"x"}, \code{"X"} and \code{"c"}).
+#' The recision is ignored for integer formats (types \code{"b"}, \code{"o"}, \code{"d"}, \code{"x"}, \code{"X"} and \code{"c"}).
 #' See \code{\link{precision_fixed}} and \code{\link{precision_round}} for help picking an appropriate precision.
 #'
 #' The available \code{type} values are:
 #' \itemize{
-#' \item{ \code{"e"} - exponent notation.}
-#' \item{ \code{"f"} - fixed point notation.}
-#' \item{ \code{"g"} - either decimal or exponent notation, rounded to significant digits.}
-#' \item{ \code{"r"} - decimal notation, rounded to significant digits.}
-#' \item{ \code{"s"} - decimal notation with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
-#' \item{ \code{"\%"} - multiply by 100, and then decimal notation with a percent sign.}
-#' \item{ \code{"p"} - multiply by 100, round to significant digits, and then decimal notation with a percent sign.}
-#' \item{ \code{"b"} - binary notation, rounded to integer.}
-#' \item{ \code{"o"} - octal notation, rounded to integer.}
-#' \item{ \code{"d"} - decimal notation, rounded to integer.}
-#' \item{ \code{"x"} - hexadecimal notation, using lower-case letters, rounded to integer.}
-#' \item{ \code{"X"} - hexadecimal notation, using upper-case letters, rounded to integer.}
-#' \item{ \code{"c"} - converts the integer to the corresponding unicode character before printing.}
-#' \item{ \code{NULL} - like \code{"g"}, but trim insignificant trailing zeros.}
+#' \item{\code{NULL}: The default format. It is similar to \code{"g"}, but insignificant trailing zeros are trimmed.}
+#' \item{\code{"a"},\code{"A"}: Double precision values in binary notation of the form \code{h.hhhp[+-]d}. This is a binary fraction expressed in hex and multiplied by a decimal power of 2. The number of hex digits after the  decimal point is specified by the precision.}
+#' \item{\code{"b"}: Integer values in binary notation.}
+#' \item{\code{"c"}: Convert to character using \code{as.character}.}
+#' \item{\code{"d"}: Integer values in decimal notation.}
+#' \item{\code{"e"},\code{"E"}: Double precision value in exponential notation of the form \code{m.dde[+-]xx} or \code{m.ddE[+-]xx}.}
+#' \item{\code{"f"}: Double precision value in fixed point decimal notation in the form \code{mmm.ddd}. The number of decimal palcaes is specified by the precision.}
+#' \item{\code{"g"},\code{"G"}: Double precision value in the either fixed point (\code{"f"}) or exponential (\code{"e"}) notation, rounded to significant digits, specified by the precision. Fixed point is used if precision is less than 4, or the exopnent is greater than or equal to the precision. Trailing zeros are not dropped.}
+#' \item{\code{"n"}: Shorthand for \code{",g"}.}
+#' \item{\code{"o"}: Integer values in octal notation.}
+#' \item{\code{"p"}: Multiplied by 100, rounded to significant digits, and then formatted with \code{"f"} and a percent sign (\code{"\%"}) suffix.}
+#' \item{\code{"r"}:  Decimal notation, but rounded to significant digits.}
+#' \item{\code{"s"}:  Decimal notation (\code{"f"}) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
+#' \item{\code{"u"}: Integer values converted to its unicode character.}
+#' \item{\code{"\%"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
+#' \item{\code{"x"}, \code{"X"}: Hexadecimal notation, rounded to integer. \code{"x"} uses lower-case letters, and \code{"X"}, upper-case letters.}
 #' }
-#' The type \code{n} is also supported as shorthand for \code{,g}.
 #'
-#' For the \code{"g"}, \code{"n"} and \code{NULL} (none) types, decimal notation is used if the resulting string would
-#' have \code{precision} or fewer digits; otherwise,
-#' an exponent notation is used.
+#' Note that these formats are not the same as those in \code{\link[base]{sprintf}}.
 #'
 #' @export
 #' @importFrom stringr str_to_lower
@@ -268,8 +283,6 @@ fmt_spec <- function(fill = " ",
     if (res$type == "n") {
       res$comma <- TRUE
       res$type <- "g"
-    } else if (type %in% c("e", "g")) {
-      res$type <- str_to_lower(type)
     } else if (!type %in% names(fmt_types)) {
       # Map invalid types to the default format.
       # Use something else for default?

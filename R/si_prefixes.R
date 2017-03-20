@@ -2,7 +2,29 @@
 #'
 #' @format A named numeric vector of SI prefixes.
 #' The names are the SI prefixes, the values are the exponents,
-#' \eqn{10^{-24}, 10^{-21}, \dots, 0, \dots, 10^{24}}{10^24, 10^21, ..., 0, ..., 10^24}.
+#' \eqn{-24, -21, \dots, 0, \dots, 21, 24}{-24, -21, ..., 0, ..., 21, 24}.
+#'
+#' @details
+#' The supported SI-prefixes are:
+#' \itemize{
+#' \item{\code{"y"} - yocto, \eqn{10^{-24}}}
+#' \item{\code{"z"} - zepto, \eqn{10^{-21}}}
+#' \item{\code{"a"} - atto, \eqn{10^{-18}}}
+#' \item{\code{"f"} - femto, \eqn{10^{-15}}}
+#' \item{\code{"p"} - pico, \eqn{10^{-12}}}
+#' \item{\code{"n"} - nano, \eqn{10^{-9}}}
+#' \item{\code{"µ"} - micro, \eqn{10^{-6}}}
+#' \item{\code{"m"} - milli, \eqn{10^{-3}}}
+#' \item{\code{" "} (none) - \eqn{10^0}}
+#' \item{\code{"k"} - kilo, \eqn{10^3}}
+#' \item{\code{"M"} - mega, \eqn{10^{6}}}
+#' \item{\code{"G"} - giga, \eqn{10^{9}}}
+#' \item{\code{"T"} - tera, \eqn{10^{12}}}
+#' \item{\code{"P"} - peta, \eqn{10^{15}}}
+#' \item{\code{"E"} - exa, \eqn{10^{18}}}
+#' \item{\code{"Z"} - zetta, \eqn{10^{21}}}
+#' \item{\code{"Y"} - yotta, \eqn{10^{24}}}
+#' }
 #'
 #' @source \href{https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes}{Table of SI prefixes}
 #' @export

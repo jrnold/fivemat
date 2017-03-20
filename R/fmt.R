@@ -22,10 +22,15 @@ fmt_group <- function(x, grouping = NULL, sep = ",") {
 #' a given \code{locale} and \code{spec}. The function \code{fmt} formats
 #' numbers, and is a convenience function for \code{fmt_new(...)(x)}.
 #'
+#'
 #' @param x A numeric or integer vector
-#' @param si \code{NULL} or a numeric vector with length one.
-#'   The \href{SI-prefix}{https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes}
-#'   to use \code{x}. Unlike the \code{"s"} format type, this applies the same
+#' @param si_prefix If non-\code{NULL}, then use
+#'   an \href{https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes}{SI prefix} to format \code{x}.
+#'   If \code{TRUE}, then use \code{precision_prefix} to automatically determine
+#'   the SI prefix to use. Otherwise, it can be any of the valid arguments
+#'   for \code{\link{si_prefix}}: a string with the prefix name, an integer with the
+#'   SI prefix exponent, or a numeric value.
+#'   Unlike the \code{"s"} format type, this applies the same
 #'   prefix to all values in \code{x}, rather than determining the SI-prefix
 #'   on a value by value basis. Additionally, a non-\code{NULL} \code{si} implies
 #'   a \code{"f"} format type, in which \code{precision} represents the number of
@@ -34,31 +39,13 @@ fmt_group <- function(x, grouping = NULL, sep = ",") {
 #'    \code{fmt_spec} object using \code{\link{as_fmt_spec}}, or a list of
 #'    arguments passed to \code{fmt_spec}.
 #' @param locale A \code{\link{fmt_locale}} object.
+#' @param inf_mark String used for \code{Inf} values.
+#' @param nan_mark String used for \code{NaN} values.
+#' @param na_mark String used for \code{NA} values.
+#' @param ... Arguments passed to \code{fmt_new}.
 #' @return \code{fmt_new} returns a function with a single argument.
 #'    \code{fmt} returns a function of the same length as \code{x} of
 #'    formatted numbers.
-#'
-#' @details
-#' The supported SI-prefixes are:
-#' \itemize{
-#' \item{\code{"y"} - yocto, \eqn{10^{-24}}}
-#' \item{\code{"z"} - zepto, \eqn{10^{-21}}}
-#' \item{\code{"a"} - atto, \eqn{10^{-18}}}
-#' \item{\code{"f"} - femto, \eqn{10^{-15}}}
-#' \item{\code{"p"} - pico, \eqn{10^{-12}}}
-#' \item{\code{"n"} - nano, \eqn{10^{-9}}}
-#' \item{\code{"µ"} - micro, \eqn{10^{-6}}}
-#' \item{\code{"m"} - milli, \eqn{10^{-3}}}
-#' \item{\code{" "} (none) - \eqn{10^0}}
-#' \item{\code{"k"} - kilo, \eqn{10^3}}
-#' \item{\code{"M"} - mega, \eqn{10^{6}}}
-#' \item{\code{"G"} - giga, \eqn{10^{9}}}
-#' \item{\code{"T"} - tera, \eqn{10^{12}}}
-#' \item{\code{"P"} - peta, \eqn{10^{15}}}
-#' \item{\code{"E"} - exa, \eqn{10^{18}}}
-#' \item{\code{"Z"} - zetta, \eqn{10^{21}}}
-#' \item{\code{"Y"} - yotta, \eqn{10^{24}}}
-#' }
 #'
 #' @export
 #' @importFrom dplyr if_else
@@ -66,13 +53,12 @@ fmt_group <- function(x, grouping = NULL, sep = ",") {
 #' @importFrom stringr str_c str_pad str_match str_replace str_replace_all
 #' @importFrom stringr str_trim
 #' @examples
-#' fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
-fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
+#' fmt(c(0.00042, 0.0042), spec = ",.0", si_prefix = 1e-6)
+fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL,
+                    inf_mark = "Inf", na_mark = "NA",
+                    nan_mark = "NaN") {
   locale <- locale %||% fmt_default_locale()
   spec <- spec %||% fmt_spec()
-  if (!is.null(si)) {
-    assert_that(is.number(si) | is.string(si))
-  }
   if (!inherits(spec, "fmt_spec")) {
     if (is.character(spec)) {
       assert_that(is.string(spec))
@@ -102,18 +88,25 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
            call. = FALSE)
     }
   }
-
-  # Other symbols for special
-  na_mark <- "NA"
-  inf_mark <- "Inf"
-  nan_mark <- "NaN"
+  assert_that(is.string(inf_mark))
+  assert_that(is.string(na_mark))
+  assert_that(is.string(nan_mark))
 
   # If predefined SI Prefix, then type is always f
-  if (!is.null(si)) {
+  if (!is.null(si_prefix)) {
+    assert_that(is.number(si_prefix) |
+                  is.string(si_prefix) |
+                  is.flag(si_prefix))
+  }
+  if (!is.null(si_prefix)) {
     spec$type <- "f"
-    si_prefix <- si_prefix(si)
-    if (is.na(si_prefix)) {
-      stop("`", si, "` is an invalid SI prefix", call. = FALSE)
+    if (is.logical(si_prefix)) {
+      si_prefix <- if (si_prefix) precision_prefix(si_prefix) else NULL
+    } else {
+      si_prefix <- si_prefix(si_prefix)
+      if (is.na(si_prefix)) {
+        stop("`", si_prefix, "` is an invalid SI prefix", call. = FALSE)
+      }
     }
   }
 
@@ -162,7 +155,8 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       # for sanity in regexes, replace , afterwardsb
       x <- fmt_group(x, locale$grouping, ",")
       # remove leading 0's and , above the width
-      x <- str_replace(x, paste0("^[0,]+((?:0,|[^,]).{", width - 1L, "})$"), "\\1")
+      x <- str_replace(x, paste0("^[0,]+((?:0,|[^,]).{", width - 1L, "})$"),
+                       "\\1")
       x <- str_replace_all(x, ",", locale$grouping_mark)
       x
     } else {
@@ -177,11 +171,11 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     x_suffix <- rep(suffix, n)
 
     # predefined SI prefix, then divide number by that amount
-    if (!is.null(si)) {
+    if (!is.null(si_prefix)) {
       x <- x * 10 ^ -si_prefix
     }
 
-    if (spec$type %==% "c") {
+    if (spec$type %==% c("c", "u")) {
       x_suffix <- str_c(format_type(x), x_suffix)
       s <- rep("", n)
     } else {
@@ -216,7 +210,6 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
                                 if_else(spec$sign %in% c("-", "("),
                                         "", spec$sign)),
                         x_prefix)
-
       x_suffix <- str_c(suffix,
                         if_else(rep(spec$type %==% "s", n),
                                 names(si_prefix.numeric(x)), ""),
@@ -227,9 +220,9 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       if (maybe_suffix) {
         tmp <- str_match(s, "^([0-9]+)(\\.)?(.*)")
         s <- case_when(
-          !finite_x ~ s,
+          !finite_x       ~ s,
           is.na(tmp[, 2]) ~ "",
-          TRUE ~ tmp[, 2]
+          TRUE            ~ tmp[, 2]
         )
         x_suffix <- str_c(if_else(is.na(tmp[ , 3]), "", locale$decimal_mark),
                           if_else(is.na(tmp[ , 4]), "", tmp[ , 4]),
@@ -248,7 +241,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
           s <- str_pad(s, width = w, side = "left", pad = "0")
         } else {
           s[!finite_x] <- str_pad(s[!finite_x], width = w, side = "left",
-                                  pad = " ")
+                                  pad = "0")
           s[finite_x] <- str_pad(s[finite_x], width = w, side = "left",
                                   pad = "0")
         }
@@ -283,7 +276,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       }
     }
     s <- replace_numerals(s, numerals = locale$numerals)
-    if (!is.null(si)) {
+    if (!is.null(si_prefix)) {
       s <- str_c(s, str_trim(names(si_prefix)))
     }
     s
@@ -295,11 +288,14 @@ print.fmt <- function(x, ...) {
   cat("<fmt>\n")
   print(environment(x)$spec)
   print(environment(x)$locale)
+  cat("Inf = ", environment(x)$inf_mark,
+      ", NA = ", environment(x)$na_mark,
+      ", NaN = ", environment(x)$nan_mark, "\n")
   invisible(x)
 }
 
 #' @rdname fmt_new
 #' @export
-fmt <- function(x, spec = NULL, locale = NULL, si = NULL) {
-  fmt_new(spec = spec, locale = locale, si = si)(x)
+fmt <- function(x, spec = NULL, locale = NULL, ...) {
+  fmt_new(spec = spec, locale = locale, ...)(x)
 }
