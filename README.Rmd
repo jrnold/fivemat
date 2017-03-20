@@ -5,7 +5,7 @@ It has similar functionality to the base R functions `sprintf`, `prettyNum` and 
 
 This package is primarily a port  of the Javascript library [d3-format](https://github.com/d3/d3-format/blob/master/README.md).
 
-# Installation
+## Installation
 
 **fivemat** is not on CRAN, you can install the development version 
 from github with
@@ -14,12 +14,15 @@ from github with
 devtools::install_github("jrnold/fivemat")
 ```
 
-# Usage
+## Usage
 
 The `fmt` function is the primary function in the package.
 The formatting is defined using a mini-language similar to `sprintf`.
-Some examples include:
 
+
+### Formats
+
+Some examples include:
 A rounded percentage,
 ```{r}
 fmt(c(0.1, 0.12, 0.123, 0.1234), ".0%")
@@ -56,6 +59,8 @@ a number grouped by thousands with two-significant digits,
 fmt(4223, ",.2r")
 ```
 
+### Localization
+
 The `locale` argument supports localization of groupings, decimal marks, numerals,
 ```{r}
 x <- 12345678910.12
@@ -68,18 +73,40 @@ fmt(x, "$,.2f", locale = "zh-CN")
 fmt(x, "$,.2f", locale = "ja-JP")
 ```
 
-
 The available default locales are in the `fmt_locales`.
 The default locales are those provided by the [d3-format](https://github.com/d3/d3-format) Javascript library.
 
-The `si` argument can be used to apply a common SI-prefix to all the values.
-```{r}
-fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
-```
+### Formatters and Scales
 
 Formats can be saved as a function to be reused,
 ```{r}
 formatter <- fmt_new(",.2f")
 formatter(c(1, 100, 1000, 1050, 1.50))
 formatter(rnorm(5))
+```
+
+This makes it easy to use as a formatter with `ggplot2` scales:
+```{r}
+library("ggplot2")
+df <- data.frame(
+  x = rnorm(10) * 100000,
+  y = seq(0, 1, length.out = 10)
+)
+p <- ggplot(df, aes(x, y)) + geom_point()
+p + scale_y_continuous(labels = fmt_new(".1%")) +
+  scale_x_continuous(labels = fmt_new(","))
+    
+p + scale_y_continuous(labels = fmt_new("$.2f")) +
+  scale_x_continuous(labels = fmt_new(",", "fr-FR"))
+
+p + scale_y_continuous(labels = fmt_new(".2f")) +
+  scale_x_continuous(labels = fmt_new("s"))
+```
+
+
+### SI Prefixes
+
+The `si` argument can be used to apply a common SI-prefix to all the values.
+```{r}
+fmt(c(0.00042, 0.0042), spec = ",.0", si_prefix = 1e-6)
 ```
