@@ -298,12 +298,12 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
 }
 
 #' @export
-print.fmt <- function(x, ...) {
+print.fmt <- function(x, ...) { # nocov start
   cat("<fmt>\n")
   print(environment(x)$spec)
   print(environment(x)$locale)
   invisible(x)
-}
+} # nocov end
 
 #' @rdname fmt_new
 #' @export

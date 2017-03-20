@@ -63,9 +63,13 @@ si_prefix <- function(x) {
 #'   Empty or missing values map to no strings. Invalid values return \code{NA}.
 #' @export
 si_prefix.character <- function(x) {
-  x[is.na(x) | x == ""] <- " "
+  x[is.na(x) | x %in% c("", "none")] <- " "
   # allow mu to be referred to by name
   x[x == "mu"] <- "\u03BC"
+  bad_names <- x[!(x %in% names(SI_PREFIXES))]
+  if (!is_empty(bad_names)) {
+    stop("Invalid SI Prefixes: ", str_c(bad_names, collapse = ","))
+  }
   SI_PREFIXES[x]
 }
 

@@ -7,8 +7,10 @@ test_that(paste("fmt_new(\"s\", si_prefix = value)(number) formats with the SI",
   expect_equal(fmt_new(",.3s", si_prefix = 1e-3)(.00042), "0.420m")
 })
 
-test_that(paste("fmt_new raises error with bad value of si_prefix"), {
-  expect_error(fmt_new("", si_prefix = list()))
+test_that(paste("fmt_new raises error with bad values of si_prefix"), {
+  expect_error(fmt_new("", si_prefix = list()),
+               regexp = paste0("no applicable method for 'si_prefix'"))
+  expect_error(fmt_new("", si_prefix = "b"), regexp = "Invalid SI Prefixes")
 })
 
 test_that(paste("fmt_new(\"s\", si_prefix = value)(number) uses yocto",
