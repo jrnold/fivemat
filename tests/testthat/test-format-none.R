@@ -1,6 +1,7 @@
 context("format default")
 
-test_that("fmt_new\".[precision]\") uses significant precision and trims insignificant zeros", {
+test_that(paste("fmt_new(\".[precision]\") uses significant precision",
+                "and trims insignificant zeros"), {
   expect_equal(fmt_new(".1")(4.9), "5")
   expect_equal(fmt_new(".1")(0.49), "0.5")
   expect_equal(fmt_new(".2")(4.9), "4.9")
@@ -14,7 +15,7 @@ test_that("fmt_new\".[precision]\") uses significant precision and trims insigni
 
 })
 
-test_that("fmt_new\".[precision]\") does not trim significant zeros", {
+test_that("fmt_new(\".[precision]\") does not trim significant zeros", {
   expect_equal(fmt_new(".5")(10), "10")
   expect_equal(fmt_new(".5")(100), "100")
   expect_equal(fmt_new(".5")(1000), "1000")
@@ -26,7 +27,8 @@ test_that("fmt_new\".[precision]\") does not trim significant zeros", {
 
 })
 
-test_that("fmt_new\".[precision]\") also trims the decimal point if there are only insignificant zeros", {
+test_that(paste("fmt_new(\".[precision]\") also trims the decimal point",
+                "if there are only insignificant zeros"), {
   expect_equal(fmt_new(".5")(1.00001), "1")
   expect_equal(fmt_new(".5")(1.00001e6), "1e+06")
   expect_equal(fmt_new(".6")(1.00001), "1.00001")
@@ -34,7 +36,7 @@ test_that("fmt_new\".[precision]\") also trims the decimal point if there are on
 
 })
 
-test_that("fmt_new\"$\") can output a currency", {
+test_that("fmt_new(\"$\") can output a currency", {
   f <- fmt_new("$")
   expect_equal(f(0), "$0")
   expect_equal(f(.042), "$0.042")
@@ -46,7 +48,8 @@ test_that("fmt_new\"$\") can output a currency", {
 
 })
 
-test_that("fmt_new\"($\") can output a currency with parentheses for negative values", {
+test_that(paste("fmt_new(\"($\") can output a currency with parentheses",
+                "for negative values"), {
   f <- fmt_new("($")
   expect_equal(f(0), "$0")
   expect_equal(f(.042), "$0.042")
@@ -58,16 +61,16 @@ test_that("fmt_new\"($\") can output a currency with parentheses for negative va
 
 })
 
-test_that("fmt_new\"\") can format negative zero as zero", {
+test_that("fmt_new(\"\") can format negative zero as zero", {
   expect_equal(fmt_new("")(-0), "0")
 
 })
 
-test_that("fmt_new\"\") can format special values", {
+test_that("fmt_new(\"\") can format special values", {
   expect_equal(fmt_new("")(c(-Inf, Inf, NA, NaN, 4200)),
                c("-Inf", "Inf", "NA", "NaN", "4200"))
   expect_equal(fmt_new(",")(c(-Inf, Inf, NA, NaN, 4200)),
                c("-Inf", "Inf", "NA", "NaN", "4,200"))
   expect_equal(fmt_new("$,")(c(-Inf, Inf, NA, NaN, 4200)),
-               c("-$Inf", "$Inf", "$NA", "$NaN", "$4,200"))
+               c("-Inf", "Inf", "NA", "NaN", "$4,200"))
 })

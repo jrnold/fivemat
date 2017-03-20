@@ -11,7 +11,8 @@ test_that("fmt_new(\"f\") can output fixed-point notation", {
   expect_equal(fmt_new(".5f")(100), "100.00000")
 })
 
-test_that("fmt_new(\"+$,f\") can output a currency with comma-grouping and sign", {
+test_that(paste("fmt_new(\"+$,f\") can output a currency with",
+                "comma-grouping and sign"), {
   f <- fmt_new("+$,.2f")
   expect_equal(f(0), "+$0.00")
   expect_equal(f(0.429), "+$0.43")
@@ -20,7 +21,8 @@ test_that("fmt_new(\"+$,f\") can output a currency with comma-grouping and sign"
   expect_equal(f(1e4), "+$10,000.00")
 })
 
-test_that("fmt_new(\",.f\") can group thousands, space fill, and round to significant digits", {
+test_that(paste("fmt_new(\",.f\") can group thousands, space fill,",
+                "and round to significant digits"), {
   expect_equal(fmt_new("10,.1f")(123456.49), " 123,456.5")
   expect_equal(fmt_new("10,.2f")(1234567.449), "1,234,567.45")
   expect_equal(fmt_new("10,.3f")(12345678.4449), "12,345,678.445")

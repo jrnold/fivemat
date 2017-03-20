@@ -6,7 +6,8 @@
 \title{Create a format locale}
 \usage{
 fmt_locale(decimal_mark = ".", grouping_mark = ",", grouping = 3,
-  currency = c("$", ""), numerals = NULL)
+  currency = c("$", ""), numerals = NULL, inf_mark = "Inf",
+  na_mark = "NA", nan_mark = "NaN")
 
 fmt_default_locale()
 }
@@ -23,6 +24,12 @@ fmt_default_locale()
 If named, the names must be `"0"`, ..., `"9"`. If not named, then the
 vector is assumed to be ordered 0 to 9; e.g. `numerals[1]` is the numeral
 for "0", `numerals[2]` is the numeral for "1" and so on.}
+
+\item{inf_mark}{Character: Mark to use for infinity (\code{Inf}).}
+
+\item{na_mark}{Character: Mark to use for missing values, (\code{NA}).}
+
+\item{nan_mark}{Character: Mark to use for not-a-number values, (\code{NaN}).}
 }
 \value{
 An object of class `"fmt_locale"`, which is a named list with elements: `decimal`, `thousands`, `grouping`, `currency`, and `numerals` (optional).

@@ -1,6 +1,6 @@
 context("format d")
 
-test_that("format(\"d\") can zero fill", {
+test_that("fmt_new(\"d\") can zero fill", {
   f <- fmt_new("08d")
   expect_equal(f(0), "00000000")
   expect_equal(f(42), "00000042")
@@ -12,7 +12,7 @@ test_that("format(\"d\") can zero fill", {
   expect_equal(f(-42000000), "-42000000")
 })
 
-test_that("format(\"d\") can space fill", {
+test_that("fmt_new(\"d\") can space fill", {
   f <- fmt_new("8d")
   expect_equal(f(0), "       0")
   expect_equal(f(42), "      42")
@@ -24,12 +24,9 @@ test_that("format(\"d\") can space fill", {
   expect_equal(f(-42000000), "-42000000")
 })
 
-test_that("format(\"d\") can underscore fill", {
+test_that("fmt_new(\"d\") can underscore fill", {
   f <- fmt_new("_>8d")
-
-
-
-    expect_equal(f(0), "_______0")
+  expect_equal(f(0), "_______0")
   expect_equal(f(42), "______42")
   expect_equal(f(42000000), "42000000")
   expect_equal(f(420000000), "420000000")
@@ -37,10 +34,9 @@ test_that("format(\"d\") can underscore fill", {
   expect_equal(f(-42), "_____-42")
   expect_equal(f(-4200000), "-4200000")
   expect_equal(f(-42000000), "-42000000")
-
 })
 
-test_that("format(\"d\") can zero fill with sign and group", {
+test_that("fmt_new(\"d\") can zero fill with sign and group", {
   f <- fmt_new("+08,d")
   expect_equal(f(0), "+0,000,000")
   expect_equal(f(42), "+0,000,042")
@@ -50,24 +46,21 @@ test_that("format(\"d\") can zero fill with sign and group", {
   expect_equal(f(-42), "-0,000,042")
   expect_equal(f(-4200000), "-4,200,000")
   expect_equal(f(-42000000), "-42,000,000")
-
 })
 
-test_that("format(\"d\") always uses zero precision", {
+test_that("fmt_new(\"d\") always uses zero precision", {
   f <- fmt_new(".2d")
   expect_equal(f(0), "0")
   expect_equal(f(42), "42")
   expect_equal(f(-4.2), "-4")
-
 })
 
-test_that("format(\"d\") rounds non-integers", {
+test_that("fmt_new(\"d\") rounds non-integers", {
   f <- fmt_new("d")
   expect_equal(f(4.2), "4")
-
 })
 
-test_that("format(\",d\") can group thousands", {
+test_that("fmt_new(\",d\") can group thousands", {
   f <- fmt_new(",d")
   expect_equal(f(0), "0")
   expect_equal(f(42), "42")
@@ -80,7 +73,7 @@ test_that("format(\",d\") can group thousands", {
   # expect_equal(f(1e21), "1e+21")
 })
 
-test_that("format(\"0,d\") can group thousands and zero fill", {
+test_that("fmt_new(\"0,d\") can group thousands and zero fill", {
   expect_equal(fmt_new("01,d")(0), "0")
   expect_equal(fmt_new("01,d")(0), "0")
   expect_equal(fmt_new("02,d")(0), "00")
@@ -96,10 +89,9 @@ test_that("format(\"0,d\") can group thousands and zero fill", {
   #expect_equal(fmt_new("013,d")(1e21), "0,000,001e+21")
   #expect_equal(fmt_new("014,d")(1e21), "00,000,001e+21")
   #expect_equal(fmt_new("015,d")(1e21), "000,000,001e+21")
-
 })
 
-test_that("format(\"0,d\") can group thousands and zero fill with overflow", {
+test_that("fmt_new(\"0,d\") can group thousands and zero fill with overflow", {
   expect_equal(fmt_new("01,d")(1), "1")
   expect_equal(fmt_new("01,d")(1), "1")
   expect_equal(fmt_new("02,d")(12), "12")
@@ -107,10 +99,9 @@ test_that("format(\"0,d\") can group thousands and zero fill with overflow", {
   expect_equal(fmt_new("05,d")(12345), "12,345")
   expect_equal(fmt_new("08,d")(12345678), "12,345,678")
   #expect_equal(fmt_new("013,d")(1234567890123), "1,234,567,890,123")
-
 })
 
-test_that("format(\",d\") can group thousands and space fill", {
+test_that("fmt_new(\",d\") can group thousands and space fill", {
   expect_equal(fmt_new("1,d")(0), "0")
   expect_equal(fmt_new("1,d")(0), "0")
   expect_equal(fmt_new("2,d")(0), " 0")
@@ -119,10 +110,9 @@ test_that("format(\",d\") can group thousands and space fill", {
   expect_equal(fmt_new("8,d")(0), "       0")
   expect_equal(fmt_new("13,d")(0), "            0")
   expect_equal(fmt_new("21,d")(0), "                    0")
-
 })
 
-test_that("format(\",d\") can group thousands and space fill with overflow", {
+test_that("fmt_new(\",d\") can group thousands and space fill with overflow", {
   expect_equal(fmt_new("1,d")(1), "1")
   expect_equal(fmt_new("1,d")(1), "1")
   expect_equal(fmt_new("2,d")(12), "12")
@@ -130,10 +120,9 @@ test_that("format(\",d\") can group thousands and space fill with overflow", {
   expect_equal(fmt_new("5,d")(12345), "12,345")
   expect_equal(fmt_new("8,d")(12345678), "12,345,678")
   #expect_equal(fmt_new("13,d")(1234567890123), "1,234,567,890,123")
-
 })
 
-test_that("format(\"<d\") align left", {
+test_that("fmt_new(\"<d\") align left", {
   expect_equal(fmt_new("<1,d")(0), "0")
   expect_equal(fmt_new("<1,d")(0), "0")
   expect_equal(fmt_new("<2,d")(0), "0 ")
@@ -142,10 +131,9 @@ test_that("format(\"<d\") align left", {
   expect_equal(fmt_new("<8,d")(0), "0       ")
   expect_equal(fmt_new("<13,d")(0), "0            ")
   expect_equal(fmt_new("<21,d")(0), "0                    ")
-
 })
 
-test_that("format(\">d\") align right", {
+test_that("fmt_new(\">d\") align right", {
   expect_equal(fmt_new(">1,d")(0), "0")
   expect_equal(fmt_new(">1,d")(0), "0")
   expect_equal(fmt_new(">2,d")(0), " 0")
@@ -156,10 +144,9 @@ test_that("format(\">d\") align right", {
   expect_equal(fmt_new(">21,d")(0), "                    0")
   expect_equal(fmt_new(">21,d")(1000), "                1,000")
   #expect_equal(fmt_new(">21,d")(1e21), "                1e+21")
-
 })
 
-test_that("format(\"^d\") align center", {
+test_that("fmt_new(\"^d\") align center", {
   expect_equal(fmt_new("^1,d")(0), "0")
   expect_equal(fmt_new("^1,d")(0), "0")
   expect_equal(fmt_new("^2,d")(0), "0 ")
@@ -170,10 +157,9 @@ test_that("format(\"^d\") align center", {
   expect_equal(fmt_new("^21,d")(0), "          0          ")
   expect_equal(fmt_new("^21,d")(1000), "        1,000        ")
   #expect_equal(fmt_new("^21,d")(1e21), "        1e+21        ")
-
 })
 
-test_that("format(\"=+,d\") pad after sign", {
+test_that("fmt_new(\"=+,d\") pad after sign", {
   expect_equal(fmt_new("=+1,d")(0), "+0")
   expect_equal(fmt_new("=+1,d")(0), "+0")
   expect_equal(fmt_new("=+2,d")(0), "+0")
@@ -183,10 +169,9 @@ test_that("format(\"=+,d\") pad after sign", {
   expect_equal(fmt_new("=+13,d")(0), "+           0")
   expect_equal(fmt_new("=+21,d")(0), "+                   0")
   #expect_equal(fmt_new("=+21,d")(1e21), "+               1e+21")
-
 })
 
-test_that("format(\"=+$,d\") pad after sign with currency", {
+test_that("fmt_new(\"=+$,d\") pad after sign with currency", {
   expect_equal(fmt_new("=+$1,d")(0), "+$0")
   expect_equal(fmt_new("=+$1,d")(0), "+$0")
   expect_equal(fmt_new("=+$2,d")(0), "+$0")
@@ -196,10 +181,9 @@ test_that("format(\"=+$,d\") pad after sign with currency", {
   expect_equal(fmt_new("=+$13,d")(0), "+$          0")
   expect_equal(fmt_new("=+$21,d")(0), "+$                  0")
   #expect_equal(fmt_new("=+$21,d")(1e21), "+$              1e+21")
-
 })
 
-test_that("format(\" ,d\") a space can denote positive numbers", {
+test_that("fmt_new(\",d\") a space can denote positive numbers", {
   expect_equal(fmt_new(" 1,d")(-1), "-1")
   expect_equal(fmt_new(" 1,d")(0), " 0")
   expect_equal(fmt_new(" 2,d")(0), " 0")
@@ -209,10 +193,9 @@ test_that("format(\" ,d\") a space can denote positive numbers", {
   expect_equal(fmt_new(" 13,d")(0), "            0")
   expect_equal(fmt_new(" 21,d")(0), "                    0")
   # expect_equal(fmt_new(" 21,d")(1e21), "                1e+21")
-
 })
 
-test_that("format(\"-,d\") explicitly only use a sign for negative numbers", {
+test_that("fmt_new(\"-,d\") explicitly only use a sign for negative numbers", {
   expect_equal(fmt_new("-1,d")(-1), "-1")
   expect_equal(fmt_new("-1,d")(0), "0")
   expect_equal(fmt_new("-2,d")(0), " 0")
@@ -224,7 +207,11 @@ test_that("format(\"-,d\") explicitly only use a sign for negative numbers", {
 
 })
 
-test_that("format(\"d\") can format negative zero as zero", {
+test_that("fmt_new(\"d\") can format negative zero as zero", {
   expect_equal(fmt_new("1d")(-0), "0")
-  #expect_equal(fmt_new("1d")(-1e-12), "0")
+  expect_equal(fmt_new("1d")(-1e-12), "0")
+})
+
+test_that("fmt_new(\"d\") works with special values", {
+  expect_equal(fmt_new("d")(NA), "NA")
 })

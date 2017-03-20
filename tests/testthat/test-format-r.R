@@ -1,6 +1,6 @@
 context("format r")
 
-test_that("format(\"r\") can round to significant digits", {
+test_that("fmt_new(\"r\") can round to significant digits", {
   expect_equal(fmt_new(".2r")(0), "0.0")
   expect_equal(fmt_new(".1r")(0.049), "0.05")
   expect_equal(fmt_new(".1r")(-0.049), "-0.05")
@@ -31,7 +31,12 @@ test_that("format(\"r\") can round to significant digits", {
   expect_equal(fmt_new(".15r")(.999999999999999), "0.999999999999999")
 })
 
-test_that("format(\"r\") can round very small numbers", {
+test_that("fmt_new(\"r\") can round very small numbers", {
   f <- fmt_new(".2r")
   expect_equal(f(1e-22), "0.00000000000000000000010")
+})
+
+test_that("fmt_new(\"r\") works with special values", {
+  f <- fmt_new("r")
+  expect_equal(f(c(Inf, -Inf, NA, NaN)), c("Inf", "-Inf", "NA", "NaN"))
 })

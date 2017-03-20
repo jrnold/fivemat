@@ -5,8 +5,7 @@
 \alias{fmt}
 \title{Format numbers}
 \usage{
-fmt_new(spec = NULL, locale = NULL, si_prefix = NULL, inf_mark = "Inf",
-  na_mark = "NA", nan_mark = "NaN")
+fmt_new(spec = NULL, locale = NULL, si_prefix = NULL)
 
 fmt(x, spec = NULL, locale = NULL, ...)
 }
@@ -28,12 +27,6 @@ prefix to all values in \code{x}, rather than determining the SI-prefix
 on a value by value basis. Additionally, a non-\code{NULL} \code{si} implies
 a \code{"f"} format type, in which \code{precision} represents the number of
 digits past the decimal point.}
-
-\item{inf_mark}{String used for \code{Inf} values.}
-
-\item{na_mark}{String used for \code{NA} values.}
-
-\item{nan_mark}{String used for \code{NaN} values.}
 
 \item{x}{A numeric or integer vector}
 

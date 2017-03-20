@@ -1,5 +1,6 @@
 # split x into mantissa and exponent
 fmt_decimal <- function(x, p) {
+  if (is_empty(x)) return(character())
   # need to handle NA, NaN, Inf
   strx <- character(length(x))
   strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
@@ -12,10 +13,11 @@ fmt_decimal <- function(x, p) {
 #' @importFrom dplyr case_when
 #' @noRd
 fmt_rounded <- function(x, p) {
-  d <- fmt_decimal(x, p)
+  if (is_empty(x)) return(character())
+  d <- fmt_decimal(x, p) # nolint
   case_when(
     !is.finite(x) ~ base::format(x),
-    d$exponent < 0 ~ str_c("0.", str_rep("0", -d$exponent -1L), d$mantissa),
+    d$exponent < 0 ~ str_c("0.", str_rep("0", -d$exponent - 1L), d$mantissa),
     str_length(d$mantissa) > (d$exponent + 1L) ~
       str_c(str_sub(d$mantissa, 1L, d$exponent + 1L), ".",
             str_sub(d$mantissa, d$exponent + 2L)),
@@ -40,16 +42,16 @@ fmt_prefix_auto <- function(x, p) {
   out <- vector("character", length(x))
   out[!fin] <- format(x[!fin])
   d <- fmt_decimal(x[fin], p)
-  i <- d$exponent - si_prefix(as.integer(d$exponent)) + 1L
-  n <- str_length(d$mantissa)
+  i <- d$exponent - si_prefix(as.integer(d$exponent)) + 1L # nolint
+  n <- str_length(d$mantissa) # nolint
   out[fin] <-
     case_when(
       i == n ~ d$mantissa,
-      i > n ~ str_c(d$mantissa, str_rep("0", i - n + 1L)),
-      i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
-                      str_sub(d$mantissa, i + 1L)),
-      TRUE ~ str_c("0.", str_rep("0", 1L - i),
-                   fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
+      i > n  ~ str_c(d$mantissa, str_rep("0", i - n + 1L)),
+      i > 0L ~ str_c(str_sub(d$mantissa, 1L, i), ".",
+                     str_sub(d$mantissa, i + 1L)),
+      TRUE   ~ str_c("0.", str_rep("0", 1L - i),
+                     fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
   out
 }
@@ -68,10 +70,11 @@ sprintf_ <- function(format) {
 int2bin <- function(x) {
   if (x == 0) {
     "0"
-  } else {}
-  out <- rev(as.integer(intToBits(x)))
-  i <- purrr::detect_index(out, as.logical)
-  str_c(out[seq(i, length(out), by = 1)], collapse = "")
+  } else {
+    out <- rev(as.integer(intToBits(x)))
+    i <- purrr::detect_index(out, as.logical)
+    str_c(out[seq(i, length(out), by = 1)], collapse = "")
+  }
 }
 
 fmt_b <- function(x, p) map_chr(round(x), int2bin)

@@ -59,4 +59,7 @@ drop_trailing_zeros <- function(x) {
   x
 }
 
-
+# make it easier to test types
+test_types <- function(x, types = character(), default = FALSE) {
+  (default & is_empty(x)) | (x %==% types)
+}

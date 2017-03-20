@@ -9,6 +9,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
+URL: https://github.com/jrnold/fivemat
+BugReports: https://github.com/jrnold/fivemat/issues
 Imports:
   assertthat,
   dplyr,

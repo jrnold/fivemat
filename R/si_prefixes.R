@@ -15,7 +15,7 @@
 #' \item{\code{"n"} - nano, \eqn{10^{-9}}}
 #' \item{\code{"µ"} - micro, \eqn{10^{-6}}}
 #' \item{\code{"m"} - milli, \eqn{10^{-3}}}
-#' \item{\code{" "} (none) - \eqn{10^0}}
+#' \item{\code{" "} - (none) \eqn{10^0}}
 #' \item{\code{"k"} - kilo, \eqn{10^3}}
 #' \item{\code{"M"} - mega, \eqn{10^{6}}}
 #' \item{\code{"G"} - giga, \eqn{10^{9}}}
