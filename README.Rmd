@@ -1,3 +1,6 @@
+---
+output: md_document
+---
 # fivemat: Better formatting for R
 
 The **fivemat** package provides better formatting for R numbers. 
