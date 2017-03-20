@@ -1,14 +1,68 @@
-PREFIXES <- c("y", "z", "a", "f", "p", "n", "\u03BC", "m", "", "k", "M", "G",
-              "T", "P", "E", "Z", "Y")
+#' SI Prefixes
+#'
+#' @format A named numeric vector of SI prefixes.
+#' The names are the SI prefixes, the values are the exponents,
+#' \eqn{10^{-24}, 10^{-21}, \dots, 0, \dots, 10^{24}}{10^24, 10^21, ..., 0, ..., 10^24}.
+#'
+#' @source \href{https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes}{Table of SI prefixes}
+#' @export
+#' @importFrom purrr set_names
+#' @examples
+#' SI_PREFIXES
+SI_PREFIXES <-
+  set_names(
+    seq(-24, 24, 3),
+    c("y", "z", "a", "f", "p", "n", "\u03BC", "m", " ", "k", "M", "G",
+      "T", "P", "E", "Z", "Y")
+  )
 
-prefix_exponent <- function(x) pmax(-8L, pmin(8L, floor(x %/% 3L))) * 3L
+STRINGS <- list("NA" = "NA", "NaN" = "NaN", "Inf" = "Inf")
 
-get_prefix <- function(x, p) {
-  out <- rep("", length(x))
-  fin <- is.finite(x)
-  exponent <- fmt_decimal(x[fin], p)$exponent
-  out[fin] <- PREFIXES[8L + prefix_exponent(exponent) %/% 3 + 1L]
-  out
+#' Lookup SI prefix
+#'
+#' Lookup an SI prefix by name, by exponent (power of 10), or by value.
+#' For exponents or values, the best SI prefix is returned.
+#'
+#' @param x A vector
+#' @return A named character vector where values are the SI prefix exponents
+#'   and names are the SI prefix names, from \code{\link{SI_PREFIXES}}.
+#' @export
+#' @examples
+#' # lookup by name
+#' si_prefix(c("K", "T", "mu", "\u03BC", "", NA))
+#' # lookup by exponent with integers
+#' si_prefix(c(-2L, -1L, 0L, 5L))
+#' # lookup by value with numeric vectors
+#' si_prefix(c(-1100, 5, 1.5e8))
+si_prefix <- function(x) {
+  UseMethod("si_prefix")
+}
+
+#' @describeIn si_prefix \code{x} are the names of the prefixes. The prefix
+#'   mu can be referred to with its unicode value, \code{"\u03BC"}, or \code{"mu"}.
+#'   Empty or missing values map to no strings. Invalid values return \code{NA}.
+#' @export
+si_prefix.character <- function(x) {
+  x[is.na(x) | x == ""] <- " "
+  # allow mu to be referred to by name
+  x[x == "mu"] <- "\u03BC"
+  SI_PREFIXES[x]
+}
+
+#' @describeIn si_prefix \code{x} are the exponents of the SI prefixes,
+#'   \eqn{-24, -21, ..., -3, 0, 3, ..., 21, 24}.
+#' @export
+si_prefix.integer <- function(x) {
+  k <- x %/% 3L
+  k[k > 8L] <- 8L
+  k[k < -8L] <- -8L
+  SI_PREFIXES[8L + k + 1L]
+}
+
+#' @describeIn si_prefix \code{x} are numeric values.
+#' @export
+si_prefix.numeric <- function(x) {
+  si_prefix.integer(as.integer(exponent(abs(x))))
 }
 
 
@@ -59,7 +113,8 @@ get_prefix <- function(x, p) {
 #' @export
 #' @importFrom dplyr if_else
 #' @importFrom purrr invoke %||% is_empty
-#' @importFrom stringr str_replace str_pad str_c str_match
+#' @importFrom stringr str_c str_pad str_match str_replace str_replace_all
+#' @importFrom stringr str_trim
 #' @examples
 #' fmt(c(0.00042, 0.0042), spec = ",.0", si = 1e-6)
 fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
@@ -101,9 +156,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
   # If predefined SI Prefix, then type is always f
   if (!is.null(si)) {
     spec$type <- "f"
-    si_exp <- max(-8, min(8, floor(exponent(si) / 3))) * 3
-    si_k <- 10 ^ -si_exp
-    si_prefix <- PREFIXES[8L + prefix_exponent(si_exp) %/% 3 + 1L]
+    si_prefix <- si_prefix(si)
   }
 
   prefix <- if (spec$symbol %==% "$") {
@@ -146,18 +199,28 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
   }
   precision <- spec$precision
 
-  group <- function(x) {
-    fmt_group(x, locale$grouping, locale$grouping_mark)
+  group <- function(x, width = 0L) {
+    if (zero) {
+      # for sanity in regexes, replace , afterwardsb
+      x <- fmt_group(x, locale$grouping, ",")
+      # remove leading 0's and , above the width
+      x <- str_replace(x, paste0("^[0,]+((?:0,|[^,]).{", width - 1L, "})$"), "\\1")
+      x <- str_replace_all(x, ",", locale$grouping_mark)
+      x
+    } else {
+      fmt_group(x, locale$grouping, locale$grouping_mark)
+    }
   }
 
   structure(function(x) {
+    finite_x <- is.finite(x)
     n <- length(x)
     x_prefix <- rep(prefix, n)
     x_suffix <- rep(suffix, n)
 
-    # predefined SI prefix, then adjust the prefix
+    # predefined SI prefix, then divide number by that amount
     if (!is.null(si)) {
-      x <- si_k * x
+      x <- x * 10 ^ -si_prefix
     }
 
     if (spec$type %==% "c") {
@@ -165,19 +228,25 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       s <- rep("", n)
     } else {
       # Perform the initial formatting.
-      neg_x  <- x < 0;
-      s <- format_type(abs(x), precision)
+      s <- character(length(x))
+      s[is.nan(x)] <- STRINGS[["NaN"]]
+      s[is.na(x) & !is.nan(x)] <- STRINGS[["NA"]]
+      s[is.infinite(x)] <- STRINGS[["Inf"]]
+      s[finite_x] <- format_type(abs(x[finite_x]), precision)
+
+      # negative values
+      neg_x <- !is.na(x) & x < 0
 
       # If a negative value rounds to zero during formatting, treat as positive.
-      if (is_empty(spec$type) || spec$type %==% c("f", "g", "d", "e",
-                                                  "r", "s", "%")) {
-        is_zero <- as.numeric(x) == 0
+      if (is_empty(spec$type) ||
+          spec$type %==% c("f", "g", "d", "e", "r", "s", "%", "a", "A")) {
+        is_zero <- as.numeric(s[finite_x]) == 0
       } else if (spec$type %in% c("x", "X")) {
-        is_zero <- strtoi(x, base = 16L) == 0
+        is_zero <- strtoi(s, base = 16L) == 0
       } else if (spec$type %in% c("o")) {
-        is_zero <- strtoi(x, base = 8L) == 0
+        is_zero <- strtoi(s[finite_x], base = 8L) == 0
       } else if (spec$type %in% c("b")) {
-        is_zero <- strtoi(x, base = 2L) == 0
+        is_zero <- strtoi(s[finite_x], base = 2L) == 0
       } else {
         is_zero <- FALSE
       }
@@ -186,19 +255,24 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
       # Compute the prefix and suffix.
       x_prefix <- str_c(if_else(neg_x,
                                 if_else(spec$sign == "(", "(", "-"),
-                                if_else(spec$sign %in% c("-", "("), "", spec$sign)),
+                                if_else(spec$sign %in% c("-", "("),
+                                        "", spec$sign)),
                         x_prefix)
 
       x_suffix <- str_c(suffix,
                         if_else(rep(spec$type %==% "s", n),
-                                get_prefix(x, precision), ""),
+                                names(si_prefix.numeric(x)), ""),
                         if_else(neg_x & spec$sign == "(", ")", ""))
 
       # Break the formatted value into the integer “value” part that can be
       # grouped, and fractional or exponential “suffix” part that is not.
       if (maybe_suffix) {
         tmp <- str_match(s, "^([0-9]+)(\\.)?(.*)")
-        s <- if_else(is.na(tmp[ , 2]), "", tmp[ , 2])
+        s <- case_when(
+          !finite_x ~ s,
+          is.na(tmp[, 2]) ~ "",
+          TRUE ~ tmp[, 2]
+        )
         x_suffix <- str_c(if_else(is.na(tmp[ , 3]), "", locale$decimal_mark),
                           if_else(is.na(tmp[ , 4]), "", tmp[ , 4]),
                           x_suffix)
@@ -208,42 +282,51 @@ fmt_new <- function(spec = NULL, locale = NULL, si = NULL) {
     # If the fill character is not "0", grouping is applied before padding.
     # if (spec$comma && !(spec$fill != "0" && spec$align != "=")) {
     if (zero) {
-      w <- if (!is_empty(spec$width)) {
-        spec$width - str_length(x_prefix)
-      } else {
-        0L
+      if (!is_empty(spec$width)) {
+        w <- spec$width - str_length(x_prefix) - str_length(x_suffix)
+        # TODO: How should NaN, NA, ... be handled?
+        # pad them with spaces
+        if (spec$type %==% "c") {
+          s <- str_pad(s, width = w, side = "left", pad = "0")
+        } else {
+          s[!finite_x] <- str_pad(s[!finite_x], width = w, side = "left",
+                                  pad = " ")
+          s[finite_x] <- str_pad(s[finite_x], width = w, side = "left",
+                                  pad = "0")
+        }
+        if (spec$comma) {
+          s[finite_x] <- group(s[finite_x], width = w + str_length(x_prefix))
+        }
       }
-      s <- str_pad(str_c(s, x_suffix), width = w, side = "left",
-                   pad = spec$fill)
-      if (spec$comma) {
-        s <- group(s)
-      }
-      s <- str_c(x_prefix, s)
+      s <- str_c(x_prefix, s, x_suffix)
     } else {
-      if (spec$comma) s <- group(s)
+      if (spec$comma) {
+        s[finite_x] <- group(s[finite_x])
+      }
       if (!is_empty(spec$width) && !is_empty(spec$fill)) {
-        s <- switch(spec$align,
-                    "<" = str_pad(str_c(x_prefix, s, x_suffix),
-                                  width = spec$width,
-                                  side = "right", pad = spec$fill),
-                    "=" = str_c(x_prefix,
-                                str_pad(str_c(s, x_suffix),
-                                        width = (spec$width -
-                                                   str_length(x_prefix)),
-                                        side = "left", pad = spec$fill)),
-                    "^" = str_pad(str_c(x_prefix, s, x_suffix),
-                                  width = spec$width,
-                                  side = "both", pad = spec$fill),
-                    ">" = str_pad(str_c(x_prefix, s, x_suffix),
-                                  width = spec$width,
-                                  side = "left", pad = spec$fill))
+        if (spec$align == "<") {
+          s <- str_pad(str_c(x_prefix, s, x_suffix), width = spec$width,
+                             side = "right", pad = spec$fill)
+        } else if (spec$align == "=") {
+          s <- str_c(x_prefix,
+                     str_pad(str_c(s, x_suffix),
+                             width = (spec$width - str_length(x_prefix)),
+                             side = "left", pad = spec$fill))
+        } else if (spec$align == "^") {
+          s <- str_pad(str_c(x_prefix, s, x_suffix), width = spec$width,
+                       side = "both", pad = spec$fill)
+        } else {
+          s <- str_pad(str_c(x_prefix, s, x_suffix), width = spec$width,
+                       side = "left", pad = spec$fill)
+        }
       } else {
+        # needs to be here because = doesn't paste these before.
         s <- str_c(x_prefix, s, x_suffix)
       }
     }
     s <- replace_numerals(s, numerals = locale$numerals)
     if (!is.null(si)) {
-      s <- str_c(s, si_prefix)
+      s <- str_c(s, str_trim(names(si_prefix)))
     }
     s
   }, class = "fmt")

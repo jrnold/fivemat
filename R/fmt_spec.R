@@ -9,19 +9,20 @@ fmt_decimal <- function(x, p) {
                  exponent = as.integer(split[, 2]))
 }
 
+
+
 #' @importFrom dplyr case_when
 #' @noRd
 fmt_rounded <- function(x, p) {
   d <- fmt_decimal(x, p)
   case_when(
     !is.finite(x) ~ base::format(x),
-    d$exponent < 0 ~ str_c("0.", strrep("0", d$exponent), d$mantissa),
+    d$exponent < 0 ~ str_c("0.", str_rep("0", -d$exponent -1L), d$mantissa),
     str_length(d$mantissa) > (d$exponent + 1L) ~
-      str_c(str_sub(d$mantissa, 1L, d$exponent), ".",
-            str_sub(d$mantissa, d$exponent + 1L)),
+      str_c(str_sub(d$mantissa, 1L, d$exponent + 1L), ".",
+            str_sub(d$mantissa, d$exponent + 2L)),
     TRUE ~ str_c(d$mantissa,
-                 strrep("0", pmax(0L,
-                                  d$exponent - str_length(d$mantissa) + 1L)))
+                 str_rep("0", d$exponent - str_length(d$mantissa) + 1L))
   )
 }
 
@@ -42,15 +43,15 @@ fmt_prefix_auto <- function(x, p) {
   out <- vector("character", length(x))
   out[!fin] <- format(x[!fin])
   d <- fmt_decimal(x[fin], p)
-  i <- d$exponent - prefix_exponent(d$exponent) + 1L
+  i <- d$exponent - si_prefix(as.integer(d$exponent)) + 1L
   n <- str_length(d$mantissa)
   out[fin] <-
     case_when(
       i == n ~ d$mantissa,
-      i > n ~ str_c(d$mantissa, strrep("0", pmax(0L, i - n + 1L))),
+      i > n ~ str_c(d$mantissa, strrep("0", i - n + 1L)),
       i > 0L ~  str_c(str_sub(d$mantissa, 1L, i), ".",
                       str_sub(d$mantissa, i + 1L)),
-      TRUE ~ str_c("0.", strrep("0", pmax(0L, 1L - i)),
+      TRUE ~ str_c("0.", str_rep("0", 1L - i),
                    fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
   out
@@ -76,8 +77,16 @@ int2bin <- function(x) {
   str_c(out[seq(i, length(out), by = 1)], collapse = "")
 }
 
-fmt_bin <- function(x) {
-  map_chr(x, int2bin)
+fmt_b <- function(x, p) map_chr(round(x), int2bin)
+
+fmt_d <- function(x, p) sprintf_("d")(round(x))
+
+fmt_g <- function(x, p) {
+  x <- signif(x, p)
+  k <- exponent(x)
+  if_else(k < -4 | k >= p,
+          sprintf_("e")(x, p - 1L),
+          sprintf_("f")(x, p - k - 1L))
 }
 
 fmt_types <- list(
@@ -85,31 +94,32 @@ fmt_types <- list(
   # a and A are from R sprintf
   "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
   "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
-  "b" = function(x, p) fmt_bin(round(x)),
+  "b" = fmt_b,
   "c" = function(x, p) base::as.character(x),
-  "d" = function(x, p) sprintf_("d")(round(x)),
+  "d" = fmt_d,
   "e" = sprintf_("e"),
   "f" = sprintf_("f"),
-  "g" = sprintf_("g"),
-  "o" = function(x, p) sprintf_("o")(round(x)),
+  "g" = fmt_g,
+  "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
   "p" = function(x, p) fmt_rounded(x * 100, p),
   "r" = fmt_rounded,
   "s" = fmt_prefix_auto,
-  "X" = function(x, p) sprintf_("X")(round(x)),
-  "x" = function(x, p) sprintf_("x")(round(x))
+  "X" = function(x, p) sprintf_("X")(as.integer(round(x))),
+  "x" = function(x, p) sprintf_("x")(as.integer(round(x)))
 )
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
-RE <- stringr::regex(str_c("^",
-                          "(?:(.)?([<>=^]))?",
-                          "([+\\-\\( ])?",
-                          "([$#])?",
-                          "(0)?",
-                          "(\\d+)?",
-                          "(,)?",
-                          "(\\.\\d+)?",
-                          "([a-z%])?",
-                          "$"), ignore_case = TRUE)
+#' @importFrom stringr regex
+RE <- regex(str_c("^",
+                  "(?:(.)?([<>=^]))?", # [fill]align
+                  "([+\\-\\( ])?",     # sign
+                  "([$#])?",           # symbol
+                  "(0)?",              # zero
+                  "(\\d+)?",           # width
+                  "(,)?",              # comma
+                  "(\\.\\d+)?",        # precision
+                  "([a-z%])?",         # type
+                  "$"), ignore_case = TRUE)
 
 #' @rdname fmt_spec
 #' @importFrom assertthat is.string
