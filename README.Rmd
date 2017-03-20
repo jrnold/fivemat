@@ -1,6 +1,10 @@
 ---
 output: md_document
 ---
+```{r include=FALSE}
+set.seed(12345)
+```
+
 # fivemat: Better formatting for R
 
 The **fivemat** package provides better formatting for R numbers. 
@@ -103,7 +107,7 @@ p + scale_y_continuous(labels = fmt_new("$.2f")) +
   scale_x_continuous(labels = fmt_new(",", "fr-FR"))
 
 p + scale_y_continuous(labels = fmt_new(".2f")) +
-  scale_x_continuous(labels = fmt_new("s"))
+  scale_x_continuous(labels = fmt_new(".0s"))
 ```
 
 

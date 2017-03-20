@@ -161,7 +161,7 @@ Formats can be saved as a function to be reused,
 
     formatter(rnorm(5))
 
-    ## [1] "-1.86" "-0.52" "-0.05" "0.54"  "-0.91"
+    ## [1] "0.59"  "0.71"  "-0.11" "-0.45" "0.61"
 
 This makes it easy to use as a formatter with `ggplot2` scales:
 
@@ -174,17 +174,17 @@ This makes it easy to use as a formatter with `ggplot2` scales:
     p + scale_y_continuous(labels = fmt_new(".1%")) +
       scale_x_continuous(labels = fmt_new(","))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
 
     p + scale_y_continuous(labels = fmt_new("$.2f")) +
       scale_x_continuous(labels = fmt_new(",", "fr-FR"))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-2.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-14-2.png)
 
     p + scale_y_continuous(labels = fmt_new(".2f")) +
-      scale_x_continuous(labels = fmt_new("s"))
+      scale_x_continuous(labels = fmt_new(".0s"))
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-3.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-14-3.png)
 
 ### SI Prefixes
 
