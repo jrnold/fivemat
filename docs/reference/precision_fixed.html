@@ -107,6 +107,13 @@ point formats such as <code>&quot;f&quot;</code>.</p>
     <p><code>precision_round</code> Returns a suggested decimal precision for format types
 that round to significant digits, such as <code>&quot;g&quot;</code> and <code>&quot;r&quot;</code>.</p>
     <p><code>precision_fixed</code> Returns a suggested SI prefix.</p>
+    <p>The suggested precision is
+$$
+p = \max \left(0, \lfloor \log_{10}|d| \rfloor \right)
+$$
+where \(d\) is the maximum absolute distance between values.
+This assumes that the values to be formatted are multiples of the step
+size <code>d</code>.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -116,6 +123,16 @@ that round to significant digits, such as <code>&quot;g&quot;</code> and <code>&
   formatting.</p>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='co'># step size is 1 and the suggested precision is 0</span>
+<span class='no'>x</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='fl'>1</span>, <span class='fl'>1.5</span>, <span class='fl'>2</span>)
+<span class='no'>p</span> <span class='kw'>&lt;-</span> <span class='fu'>precision_fixed</span>(<span class='no'>x</span>)
+<span class='no'>p</span></div><div class='output co'>#&gt; [1] 1</div><div class='input'><span class='fu'><a href='fmt_new.html'>fmt</a></span>(<span class='no'>x</span>, <span class='fu'>paste0</span>(<span class='st'>"."</span>, <span class='no'>p</span>, <span class='st'>"f"</span>))</div><div class='output co'>#&gt; [1] &quot;1.0&quot; &quot;1.5&quot; &quot;2.0&quot;</div><div class='input'><span class='co'># alternatively calculate the step size</span>
+<span class='no'>step</span> <span class='kw'>&lt;-</span> <span class='fu'>max</span>(<span class='fu'>diff</span>(<span class='fu'>sort</span>(<span class='no'>x</span>)))
+<span class='fu'>precision_fixed_</span>(<span class='no'>step</span>)</div><div class='output co'>#&gt; [1] 1</div><div class='input'><span class='co'># For 1, 2, 3, the step size is 1 suggested precision is 0</span>
+<span class='no'>x2</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>3</span>
+<span class='no'>p2</span> <span class='kw'>&lt;-</span> <span class='fu'>precision_fixed</span>(<span class='no'>x2</span>)
+<span class='no'>p2</span></div><div class='output co'>#&gt; [1] 0</div><div class='input'><span class='fu'><a href='fmt_new.html'>fmt</a></span>(<span class='no'>x2</span>, <span class='fu'>paste0</span>(<span class='st'>"."</span>, <span class='no'>p</span>, <span class='st'>"f"</span>))</div><div class='output co'>#&gt; [1] &quot;1.0&quot; &quot;2.0&quot; &quot;3.0&quot;</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -129,7 +146,9 @@ that round to significant digits, such as <code>&quot;g&quot;</code> and <code>&
       <li><a href="#details">Details</a></li>
 
       <li><a href="#see-also">See also</a></li>
-          </ul>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
   </div>
 </div>

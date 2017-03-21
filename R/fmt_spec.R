@@ -31,9 +31,13 @@ fmt_default <- function(x, ...) {
   UseMethod("fmt_default")
 }
 
-fmt_default.numeric <- function(x, p, ...) sprintf_("g")(x, p)
+fmt_default.numeric <- function(x, p, ...) {
+  sprintf_("g")(x, p)
+}
 
-fmt_default.integer <- function(x, ...) sprintf_("d")(x)
+fmt_default.integer <- function(x, ...) {
+  sprintf_("d")(x)
+}
 
 #' @importFrom dplyr case_when
 #' @noRd
@@ -94,7 +98,7 @@ fmt_types <- list(
   "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
   "b" = function(x, p) map_chr(round(x), int2bin),
   "c" = function(x, p) as.character(x),
-  "d" = function(x, p) sprintf_("d")(round(x)),
+  "d" = function(x, p) sprintf("%d", as.integer(round(x))),
   "e" = sprintf_("e"),
   "E" = sprintf_("E"),
   "f" = sprintf_("f"),

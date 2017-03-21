@@ -93,40 +93,15 @@ devtools::<span class="kw">install_github</span>(<span class="st">"jrnold/fivema
 <pre><code>## [1] ".........42........."</code></pre>
 <p>SI-prefixed numbers with two significant digits,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">1.23</span> *<span class="st"> </span><span class="dv">10</span> ^<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">24</span>, <span class="dv">24</span>, <span class="dt">by =</span> <span class="dv">1</span>), <span class="st">",.2s"</span>)</code></pre></div>
-<pre><code>##  [1] "1.2y"   "12y"    "1,200y" "1.2z"   "12z"    "1,200z" "1.2a"  
-##  [8] "12a"    "1,200a" "1.2f"   "12f"    "1,200f" "1.2p"   "12p"   
-## [15] "1,200p" "1.2n"   "12n"    "1,200n" "1.2μ"   "12μ"    "1,200μ"
-## [22] "1.2m"   "12m"    "1,200m" "1.2 "   "12 "    "1,200 " "1.2k"  
-## [29] "12k"    "1,200k" "1.2M"   "12M"    "1,200M" "1.2G"   "12G"   
-## [36] "1,200G" "1.2T"   "12T"    "1,200T" "1.2P"   "12P"    "1,200P"
-## [43] "1.2E"   "12E"    "1,200E" "1.2Z"   "12Z"    "1,200Z" "1.2Y"</code></pre>
+<pre><code>##  [1] "1.2y" "12y"  "120y" "1.2z" "12z"  "120z" "1.2a" "12a"  "120a" "1.2f"
+## [11] "12f"  "120f" "1.2p" "12p"  "120p" "1.2n" "12n"  "120n" "1.2μ" "12μ" 
+## [21] "120μ" "1.2m" "12m"  "120m" "1.2"  "12"   "120"  "1.2k" "12k"  "120k"
+## [31] "1.2M" "12M"  "120M" "1.2G" "12G"  "120G" "1.2T" "12T"  "120T" "1.2P"
+## [41] "12P"  "120P" "1.2E" "12E"  "120E" "1.2Z" "12Z"  "120Z" "1.2Y"</code></pre>
 <p>SI-prefixed numbers with one digit after the decimal point and a common SI-prefix,</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">1.23</span> *<span class="st"> </span><span class="dv">10</span> ^<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">24</span>, <span class="dv">24</span>, <span class="dt">by =</span> <span class="dv">1</span>), <span class="st">".1"</span>, <span class="dt">si =</span> <span class="fl">1e3</span>)</code></pre></div>
-<pre><code>##  [1] "0.0k"                      "0.0k"                     
-##  [3] "0.0k"                      "0.0k"                     
-##  [5] "0.0k"                      "0.0k"                     
-##  [7] "0.0k"                      "0.0k"                     
-##  [9] "0.0k"                      "0.0k"                     
-## [11] "0.0k"                      "0.0k"                     
-## [13] "0.0k"                      "0.0k"                     
-## [15] "0.0k"                      "0.0k"                     
-## [17] "0.0k"                      "0.0k"                     
-## [19] "0.0k"                      "0.0k"                     
-## [21] "0.0k"                      "0.0k"                     
-## [23] "0.0k"                      "0.0k"                     
-## [25] "0.0k"                      "0.0k"                     
-## [27] "0.1k"                      "1.2k"                     
-## [29] "12.3k"                     "123.0k"                   
-## [31] "1230.0k"                   "12300.0k"                 
-## [33] "123000.0k"                 "1230000.0k"               
-## [35] "12300000.0k"               "123000000.0k"             
-## [37] "1230000000.0k"             "12300000000.0k"           
-## [39] "123000000000.0k"           "1230000000000.0k"         
-## [41] "12300000000000.0k"         "123000000000000.0k"       
-## [43] "1230000000000000.0k"       "12300000000000000.0k"     
-## [45] "123000000000000000.0k"     "1230000000000000000.0k"   
-## [47] "12300000000000000000.0k"   "122999999999999983616.0k" 
-## [49] "1230000000000000000000.0k"</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="fl">1.23</span> *<span class="st"> </span><span class="dv">10</span> ^<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">6</span>, <span class="dv">6</span>, <span class="dt">by =</span> <span class="dv">1</span>), <span class="st">".1"</span>, <span class="dt">si =</span> <span class="st">"k"</span>)</code></pre></div>
+<pre><code>##  [1] "0.0k"    "0.0k"    "0.0k"    "0.0k"    "0.0k"    "0.0k"    "0.0k"   
+##  [8] "0.0k"    "0.1k"    "1.2k"    "12.3k"   "123.0k"  "1230.0k"</code></pre>
 <p>a prefixed lowercase hexadecimal number,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="reference/fmt_new.html">fmt</a></span>(<span class="dv">48879</span>, <span class="st">"#x"</span>)</code></pre></div>
 <pre><code>## [1] "0xbeef"</code></pre>
@@ -172,14 +147,13 @@ df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
 )
 p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(x, y)) +<span class="st"> </span><span class="kw">geom_point</span>()
 p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".1%"</span>)) +
-<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672"></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">"$.2f"</span>)) +
-<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>, <span class="st">"fr-FR"</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-13-2.png" width="672"></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".2f"</span>)) +
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>))
+    
+p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">"$.2f"</span>)) +
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">","</span>, <span class="st">"fr-FR"</span>))
+
+p +<span class="st"> </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".2f"</span>)) +
 <span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> <span class="kw"><a href="reference/fmt_new.html">fmt_new</a></span>(<span class="st">".0s"</span>))</code></pre></div>
-<p><img src="index_files/figure-html/unnamed-chunk-13-3.png" width="672"></p>
 </div>
 <div id="si-prefixes" class="section level3">
 <h3 class="hasAnchor">

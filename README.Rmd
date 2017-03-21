@@ -1,5 +1,5 @@
 ---
-output: md_document
+output: github_document
 ---
 ```{r include=FALSE}
 set.seed(12345)
@@ -8,6 +8,8 @@ set.seed(12345)
 # fivemat: Better formatting for R
 
 [![Travis-CI Build Status](https://travis-ci.org/jrnold/fivemat.svg?branch=master)](https://travis-ci.org/jrnold/fivemat)
+[![codecov](https://codecov.io/gh/jrnold/fivemat/branch/master/graph/badge.svg)](https://codecov.io/gh/jrnold/fivemat)
+
 
 The **fivemat** package provides better formatting for R numbers. 
 It has similar functionality to the base R functions `sprintf`, `prettyNum` and `formatC`, but with more features and support for locales.
@@ -57,7 +59,7 @@ fmt(1.23 * 10 ^ seq(-24, 24, by = 1), ",.2s")
 SI-prefixed numbers with one digit after the decimal point and
 a common SI-prefix,
 ```{r}
-fmt(1.23 * 10 ^ seq(-24, 24, by = 1), ".1", si = 1e3)
+fmt(1.23 * 10 ^ seq(-6, 6, by = 1), ".1", si = "k")
 ```
 a prefixed lowercase hexadecimal number,
 ```{r}
@@ -95,7 +97,7 @@ formatter(rnorm(5))
 ```
 
 This makes it easy to use as a formatter with `ggplot2` scales:
-```{r}
+```{r results='hide',fig.keep = 'none'}
 library("ggplot2")
 df <- data.frame(
   x = rnorm(10) * 100000,

@@ -113,6 +113,15 @@ then the prefix is determined from the median value in <code>x</code>.</dd>
   <code><a href='SI_PREFIXES.html'>SI_PREFIXES</a></code>.</dd>
 </dl></p>
     
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The suggested precision, \(p\), when formatting a vector with
+an SI Prefix of \(10^k\) is,
+$$
+p = \max \left( 0, k - \lfloor \log_{10}d \rfloor \right)
+,$$
+where \(d\) is the maximum absolute value between elements in the vector.</p>
+    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <p><code><a href='precision_fixed.html'>precision_fixed</a></code> for the suggested precision to
@@ -121,6 +130,10 @@ then the prefix is determined from the median value in <code>x</code>.</dd>
   formats that round to significant digits.</p>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='no'>x</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='fl'>1.1e6</span>, <span class='fl'>1.2e6</span>, <span class='fl'>1.3e6</span>)
+<span class='no'>p</span> <span class='kw'>&lt;-</span> <span class='fu'>precision_prefix</span>(<span class='no'>x</span>, <span class='fl'>6L</span>)
+<span class='no'>p</span>$<span class='no'>precision</span></div><div class='output co'>#&gt; [1] 1</div><div class='input'><span class='fu'><a href='fmt_new.html'>fmt</a></span>(<span class='no'>x</span>, <span class='fu'>paste0</span>(<span class='st'>"."</span>, <span class='no'>p</span>$<span class='no'>precision</span>), <span class='kw'>si_prefix</span> <span class='kw'>=</span> <span class='fl'>6L</span>)</div><div class='output co'>#&gt; [1] &quot;1.1M&quot; &quot;1.2M&quot; &quot;1.3M&quot;</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -131,8 +144,12 @@ then the prefix is determined from the median value in <code>x</code>.</dd>
 
       <li><a href="#value">Value</a></li>
 
+      <li><a href="#details">Details</a></li>
+
       <li><a href="#see-also">See also</a></li>
-          </ul>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
   </div>
 </div>
