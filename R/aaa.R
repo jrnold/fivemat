@@ -25,19 +25,6 @@ na_else <- function(x, default) {
   if_else(!is.na(x), x, default)
 }
 
-# since precision is just rounding, which is just binning
-# calculate precision with histogram methods
-# auto_precision <- function(x) {
-#   x <- x[!is.na(x)]
-#   floor(log10(diff(range(x)) / nclass.FD(x)))
-# }
-
-# drop_trailing_zeros <- function(x) {
-#   notna <- !is.na(x)
-#   x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")
-#   x
-# }
-
 # make it easier to test types
 test_types <- function(x, types = character(), default = FALSE) {
   (default & is_empty(x)) | (x %==% types)
