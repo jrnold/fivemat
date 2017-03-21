@@ -2,7 +2,7 @@
 fivemat: Better formatting for R
 ================================
 
-[![Travis-CI Build Status](https://travis-ci.org/jrnold/fivemat.svg?branch=master)](https://travis-ci.org/jrnold/fivemat)
+[![Travis-CI Build Status](https://travis-ci.org/jrnold/fivemat.svg?branch=master)](https://travis-ci.org/jrnold/fivemat) [![codecov](https://codecov.io/gh/jrnold/fivemat/branch/master/graph/badge.svg)](https://codecov.io/gh/jrnold/fivemat)
 
 The **fivemat** package provides better formatting for R numbers. It has similar functionality to the base R functions `sprintf`, `prettyNum` and `formatC`, but with more features and support for locales.
 
