@@ -35,7 +35,7 @@ values to format, \code{x}.
 \details{
 The suggested precision, \eqn{p}, for values in a vector, \eqn{x}, is
 \eqn{
-  p = \max \left(0,\lfloor\log_{10}(\lvert \max_{i} x \rvert) \rfloor - \lfloor \log_{10}(d) \rfloor \right)
+  p = \max \left(0,\lfloor\log_{10}(|\max_{i} x|) \rfloor - \lfloor \log_{10} d \rfloor \right)
 }{max(0, floor(log10(max(abs(x)) - d)) - floor(log10(d)))},
 where \eqn{d} the maximum absolute distance between values of
 \eqn{x}.

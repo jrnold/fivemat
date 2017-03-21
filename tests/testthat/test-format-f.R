@@ -43,5 +43,6 @@ test_that("fmt_new(\"f\") can format negative zero as zero", {
 })
 
 test_that("fmt_new(\"f\") can format special values", {
-  expect_equal(fmt_new("f")(c(NA, NaN, Inf, -Inf)), c("NA", "NaN", "Inf", "-Inf"))
+  expect_equal(fmt_new("f")(c(NA, NaN, Inf, -Inf)),
+               c("NA", "NaN", "Inf", "-Inf"))
 })

@@ -36,8 +36,8 @@ that round to significant digits, such as \code{"g"} and \code{"r"}.
 
 The suggested precision is
 \deqn{
-p = \max \left(0, \lfloor \log_{10}\lvert d \rvert \rfloor \right)
-}{max(0, floor(log10(abs(d))))}
+p = \max \left(0, \lfloor \log_{10}|d| \rfloor \right)
+}{max(0, floor(log10(d)))}
 where \eqn{d} is the maximum absolute distance between values.
 This assumes that the values to be formatted are multiples of the step
 size \code{d}.

@@ -12,8 +12,8 @@
 #' @details
 #' The suggested precision is
 #' \deqn{
-#' p = \max \left(0, \lfloor \log_{10}\lvert d \rvert \rfloor \right)
-#' }{max(0, floor(log10(abs(d))))}
+#' p = \max \left(0, \lfloor \log_{10}|d| \rfloor \right)
+#' }{max(0, floor(log10(d)))}
 #' where \eqn{d} is the maximum absolute distance between values.
 #' This assumes that the values to be formatted are multiples of the step
 #' size \code{d}.
@@ -68,7 +68,7 @@ precision_fixed_ <- function(step) {
 #' @details
 #' The suggested precision, \eqn{p}, for values in a vector, \eqn{x}, is
 #' \eqn{
-#'   p = \max \left(0,\lfloor\log_{10}(\lvert \max_{i} x \rvert) \rfloor - \lfloor \log_{10}(d) \rfloor \right)
+#'   p = \max \left(0,\lfloor\log_{10}(|\max_{i} x|) \rfloor - \lfloor \log_{10} d \rfloor \right)
 #' }{max(0, floor(log10(max(abs(x)) - d)) - floor(log10(d)))},
 #' where \eqn{d} the maximum absolute distance between values of
 #' \eqn{x}.
@@ -124,7 +124,7 @@ precision_round_ <- function(step, xmax) {
 #' @details The suggested precision, \eqn{p}, when formatting a vector with
 #' an SI Prefix of \eqn{10^k} is,
 #' \deqn{
-#' p = \max \left( 0, k - \lfloor \log_{10}\lvert d \rvert \rfloor \right)
+#' p = \max \left( 0, k - \lfloor \log_{10}d \rfloor \right)
 #' ,}{p = max(0, floor(log10(d))),}
 #' where \eqn{d} is the maximum absolute value between elements in the vector.
 #'

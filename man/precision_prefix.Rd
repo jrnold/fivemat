@@ -42,7 +42,7 @@ numeric vector of values to format, \code{x}.
 The suggested precision, \eqn{p}, when formatting a vector with
 an SI Prefix of \eqn{10^k} is,
 \deqn{
-p = \max \left( 0, k - \lfloor \log_{10}\lvert d \rvert \rfloor \right)
+p = \max \left( 0, k - \lfloor \log_{10}d \rfloor \right)
 ,}{p = max(0, floor(log10(d))),}
 where \eqn{d} is the maximum absolute value between elements in the vector.
 }
