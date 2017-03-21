@@ -7,6 +7,11 @@ test_that("precision_round_(step, max) returns the expected value", {
   expect_equal(precision_round_(0.01, 1.01), 3)
 })
 
+test_that("precision_round_(step, max) returns the expected value", {
+  expect_equal(precision_round(c(0.99, 1.0, 1.01)), 3)
+  expect_equal(precision_round(c(0.9, 1.0, 1.1)), 2)
+})
+
 test_that(str_c("precision_prefix_(step, value) returns zero if step has ",
                 "the same units as value"), {
   for (i in seq(-24, 24, by = 3)) {
@@ -43,11 +48,21 @@ test_that(str_c("precision_prefix_(step, value) returns the expected ",
   expect_equivalent(precision_prefix_(1e23, 1e27)$precision, 1) # 1000.0Y
 })
 
-test_that("precision_fixed_(number) returns the expected value", {
+test_that("precision_prefix(x) returns the expected precision", {
+  expect_identical(precision_prefix(c(1.1e6, 1.2e6, 1.3e6)),
+                   list(precision = 1L, si_prefix = c("M" = 6L)))
+})
+
+test_that("precision_fixed_(step) returns the expected value", {
   expect_equal(precision_fixed_(8.9), 0)
   expect_equal(precision_fixed_(1.1), 0)
   expect_equal(precision_fixed_(0.89), 1)
   expect_equal(precision_fixed_(0.11), 1)
   expect_equal(precision_fixed_(0.089), 2)
   expect_equal(precision_fixed_(0.011), 2)
+})
+
+test_that("precision_fixed(x) returns the expected value", {
+  expect_equal(precision_fixed(c(1, 1.5, 2)), 1)
+  expect_equal(precision_fixed(c(1, 2, 3)), 0)
 })

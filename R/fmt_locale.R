@@ -38,7 +38,8 @@ fmt_locale <- function(decimal_mark = ".",
   if (!is.null(numerals)) {
     assert_that(is.character(numerals) && length(numerals) == 10)
     if (!is.null(names(numerals))) {
-      assert_that(sort(names(numerals)) == as.character(0:9))
+      numerals <- numerals[order(names(numerals))]
+      assert_that(all(names(numerals) == as.character(0:9)))
     } else {
       names(numerals) <- as.character(0:9)
     }

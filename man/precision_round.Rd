@@ -32,6 +32,29 @@ formats that round to significant digits (e.g. \code{"g"}).
 \code{precision_round} calculates this precision given a numeric vector of
 values to format, \code{x}.
 }
+\details{
+The suggested precision, \eqn{p}, for values in a vector, \eqn{x}, is
+\eqn{
+  p = \max \left(0,\lfloor\log_{10}(\lvert \max_{i} x \rvert) \rfloor - \lfloor \log_{10}(d) \rfloor \right)
+}{max(0, floor(log10(max(abs(x)) - d)) - floor(log10(d)))},
+where \eqn{d} the maximum absolute distance between values of
+\eqn{x}.
+
+For the exponential format, \code{"e"}, substract use \code{p - 1} for the
+precision.
+}
+\examples{
+# For these, the step size is 0.01 and suggested precision is 3
+x <- c(0.99, 1, 1.01)
+p <- precision_round(x)
+fmt(x, paste0(".", p, "r"))
+# For these, the step size is 0.1 and suggested precision is 2
+x2 <- c(0.9, 1.0, 1.1)
+p2 <- precision_round(x2)
+fmt(x2, paste0(".", p2, "r"))
+# For the e format type subtract one
+fmt(x, paste0(".", p - 1, "e"))
+}
 \seealso{
 \code{\link{precision_fixed}} for the suggested precision to
   use with formats that use a fixed number of digits after the decimal point,

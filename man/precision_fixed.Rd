@@ -32,6 +32,30 @@ point formats such as \code{"f"}.
 that round to significant digits, such as \code{"g"} and \code{"r"}.
 
 \code{precision_fixed} Returns a suggested SI prefix.
+
+
+The suggested precision is
+\deqn{
+p = \max \left(0, \lfloor \log_{10}\lvert d \rvert \rfloor \right)
+}{max(0, floor(log10(abs(d))))}
+where \eqn{d} is the maximum absolute distance between values.
+This assumes that the values to be formatted are multiples of the step
+size \code{d}.
+}
+\examples{
+# step size is 1 and the suggested precision is 0
+x <- c(1, 1.5, 2)
+p <- precision_fixed(x)
+p
+fmt(x, paste0(".", p, "f"))
+# alternatively calculate the step size
+step <- max(diff(sort(x)))
+precision_fixed_(step)
+# For 1, 2, 3, the step size is 1 suggested precision is 0
+x2 <- 1:3
+p2 <- precision_fixed(x2)
+p2
+fmt(x2, paste0(".", p, "f"))
 }
 \seealso{
 \code{\link{precision_round}} for the suggested precision to

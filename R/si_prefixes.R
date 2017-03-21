@@ -33,7 +33,7 @@
 #' SI_PREFIXES
 SI_PREFIXES <-
   set_names(
-    seq(-24, 24, 3),
+    seq(-24L, 24L, 3L),
     c("y", "z", "a", "f", "p", "n", "\u03BC", "m", " ", "k", "M", "G",
       "T", "P", "E", "Z", "Y")
   )

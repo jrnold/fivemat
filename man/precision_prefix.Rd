@@ -38,6 +38,20 @@ given a \code{value} to format, and the difference between the values,
 \code{precision_prefix} calculates the suggested SI Prefix given a
 numeric vector of values to format, \code{x}.
 }
+\details{
+The suggested precision, \eqn{p}, when formatting a vector with
+an SI Prefix of \eqn{10^k} is,
+\deqn{
+p = \max \left( 0, k - \lfloor \log_{10}\lvert d \rvert \rfloor \right)
+,}{p = max(0, floor(log10(d))),}
+where \eqn{d} is the maximum absolute value between elements in the vector.
+}
+\examples{
+x <- c(1.1e6, 1.2e6, 1.3e6)
+p <- precision_prefix(x, 6L)
+p$precision
+fmt(x, paste0(".", p$precision), si_prefix = 6L)
+}
 \seealso{
 \code{\link{precision_fixed}} for the suggested precision to
   use with formats that use a fixed number of digits after the decimal point,

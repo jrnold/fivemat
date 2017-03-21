@@ -1,33 +1,17 @@
 context("fmt_locale")
 
-# test_that("fmt_default(definition) returns the new default locale", {
-#   locale <- fmt_default(frFr)
-#   try {
-#     test.equal(locale.format("$,.2f")(12345678.90), "12.345.678,90 €")
-#     test.end()
-#   } finally {
-#     fmt_default(enUs)
-#   }
-# })
-#
-# test_that("fmt_default(definition) affects d3.format", {
-#   locale <- fmt_default(frFr)
-#   try {
-#     test.equal(d3.format, locale.format)
-#     test.equal(d3.format("$,.2f")(12345678.90), "12.345.678,90 €")
-#     test.end()
-#   } finally {
-#     fmt_default(enUs)
-#   }
-# })
-#
-# test_that("fmt_default(definition) affects d3.formatPrefix", {
-#   locale <- fmt_default(frFr)
-#   try {
-#     test.equal(d3.formatPrefix, locale.formatPrefix)
-#     test.equal(d3.formatPrefix(",.2", 1e3)(12345678.90), "12.345,68k")
-#     test.end()
-#   } finally {
-#     fmt_default(enUs)
-#   }
-# })
+library("purrr")
+test_that("fmt_locale numerals argument works", {
+  expect_equal(fmt_locale(numerals = LETTERS[1:10])$numerals,
+               set_names(LETTERS[1:10], as.character(0:9)))
+  expect_equal(fmt_locale(numerals = set_names(LETTERS[1:10], 9:0))$numerals,
+               set_names(LETTERS[10:1], as.character(0:9)))
+})
+
+test_that("fmt_locale numerals raises error if wrong names", {
+  expect_error(fmt_locale(numerals = set_names(as.character(0:9),
+                                               LETTERS[1:10]))$numerals,
+               regexp = "names\\(numerals\\) == as.character\\(0:9\\)")
+  expect_error(fmt_locale(numerals = as.character(0:10))$numerals,
+               regexp = "length\\(numerals\\) not equal to 10")
+})
