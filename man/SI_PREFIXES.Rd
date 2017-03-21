@@ -8,7 +8,7 @@
 The names are the SI prefixes, the values are the exponents,
 \eqn{-24, -21, \dots, 0, \dots, 21, 24}{-24, -21, ..., 0, ..., 21, 24}.}
 \source{
-\href{https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes}{Table of SI prefixes}
+\href{https://en.wikipedia.org/wiki/Metric_prefix}{Table of SI prefixes}
 }
 \usage{
 SI_PREFIXES

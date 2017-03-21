@@ -26,7 +26,7 @@
 #' \item{\code{"Y"} - yotta, \eqn{10^{24}}}
 #' }
 #'
-#' @source \href{https://en.wikipedia.org/wiki/Metric_prefix\#List_of_SI_prefixes}{Table of SI prefixes}
+#' @source \href{https://en.wikipedia.org/wiki/Metric_prefix}{Table of SI prefixes}
 #' @export
 #' @importFrom purrr set_names
 #' @examples

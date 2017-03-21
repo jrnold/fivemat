@@ -7,7 +7,8 @@ test_that("fmt(…) can format numbers using ar-001 locale.", {
 
 test_that("fmt(…) can format numbers using ar-AE locale.", {
   locale <- fmt_locales[["ar-AE"]]
-  expect_equal(fmt(1234.56, spec = "$,.2f", locale = locale), "١٬٢٣٤٫٥٦ د.إ.")
+  expect_equal(fmt(1234.56, spec = "$,.2f", locale = locale),
+               "١٬٢٣٤٫٥٦ د.إ.")
 })
 
 test_that("fmt(…) can format numbers using ar-BH locale.", {
