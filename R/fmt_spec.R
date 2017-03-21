@@ -10,6 +10,7 @@ fmt_decimal <- function(x, p) {
                  exponent = as.integer(split[, 2]))
 }
 
+#' @importFrom stringi stri_dup
 #' @importFrom dplyr case_when
 #' @noRd
 fmt_rounded <- function(x, p) {
@@ -17,12 +18,12 @@ fmt_rounded <- function(x, p) {
   d <- fmt_decimal(x, p) # nolint
   case_when(
     !is.finite(x) ~ base::format(x),
-    d$exponent < 0 ~ str_c("0.", str_rep("0", -d$exponent - 1L), d$mantissa),
+    d$exponent < 0 ~ str_c("0.", stri_dup("0", -d$exponent - 1L), d$mantissa),
     str_length(d$mantissa) > (d$exponent + 1L) ~
       str_c(str_sub(d$mantissa, 1L, d$exponent + 1L), ".",
             str_sub(d$mantissa, d$exponent + 2L)),
     TRUE ~ str_c(d$mantissa,
-                 str_rep("0", d$exponent - str_length(d$mantissa) + 1L))
+                 stri_dup("0", d$exponent - str_length(d$mantissa) + 1L))
   )
 }
 
@@ -39,6 +40,7 @@ fmt_default.integer <- function(x, ...) {
   sprintf_("d")(x)
 }
 
+#' @importFrom stringi stri_dup
 #' @importFrom dplyr case_when
 #' @noRd
 fmt_prefix_auto <- function(x, p) {
@@ -52,10 +54,10 @@ fmt_prefix_auto <- function(x, p) {
   out[fin] <-
     case_when(
       i == n ~ d$mantissa,
-      i > n  ~ str_c(d$mantissa, str_rep("0", i - n)),
+      i > n  ~ str_c(d$mantissa, stri_dup("0", i - n)),
       i > 0L ~ str_c(str_sub(d$mantissa, 1L, i), ".",
                      str_sub(d$mantissa, i + 1L)),
-      TRUE   ~ str_c("0.", str_rep("0", -i),
+      TRUE   ~ str_c("0.", stri_dup("0", -i),
                      fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
   attr(out, "si_prefix") <- names(prefix_exponent)

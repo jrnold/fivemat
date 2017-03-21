@@ -25,23 +25,6 @@ na_else <- function(x, default) {
   if_else(!is.na(x), x, default)
 }
 
-# version of strrep that doesn't error if times < 0
-#' @importFrom stringi stri_paste_list
-#' @importFrom purrr rerun
-#' @importFrom purrr map2_chr
-str_rep <- function(x, times = 1L) {
-  f <- function(el, times) {
-    if (times < 0) {
-      NA_character_
-    } else if (times == 0) {
-      ""
-    } else {
-      stri_paste_list(rerun(times, el), collapse = "")
-    }
-  }
-  map2_chr(x, times, f)
-}
-
 # since precision is just rounding, which is just binning
 # calculate precision with histogram methods
 # auto_precision <- function(x) {
