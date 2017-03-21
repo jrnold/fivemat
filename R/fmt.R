@@ -87,12 +87,10 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
     }
   }
 
-  # If predefined SI Prefix, then type is always f
+  # If predefined SI Prefix
   if (!is.null(si_prefix)) {
+    # si_prefix() will throw an error
     si_prefix <- si_prefix(si_prefix)
-    if (is.na(si_prefix)) {
-      stop("`", si_prefix, "` is an invalid SI prefix", call. = FALSE)
-    }
     spec$type <- "f"
   }
 
@@ -138,9 +136,10 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
 
   structure(function(x) {
     n <- length(x)
-    sprefix <- rep("", n)
-    ssuffix <- rep("", n)
+    prefix <- rep("", n)
+    suffix <- rep("", n)
     string <- rep("", n)
+    si_prefix_str <- rep("", n)
 
     if (test_types(spec$type, "c")) {
       is_na <- is.na(x)
@@ -160,23 +159,23 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
 
     # need to ensure that prefixes aren't put before special values
     if (spec$symbol %==% "$") {
-      sprefix[fin] <- locale$currency[1]
+      prefix[fin] <- locale$currency[1]
     } else if (spec$symbol %==% "#") {
       if (test_types(spec$type, c("b", "o", "x", "X"))) {
-        sprefix[fin] <- str_c("0", str_to_lower(spec$type))
+        prefix[fin] <- str_c("0", str_to_lower(spec$type))
       } else if (test_types(spec$type, c("a", "A"))) {
-        sprefix[fin] <- str_c("0x")
+        prefix[fin] <- str_c("0x")
       }
     }
 
     if (spec$symbol %==% "$") {
-      ssuffix[fin] <- locale$currency[2]
+      suffix[fin] <- locale$currency[2]
     } else if (test_types(spec$type, c("%", "p"))) {
-      ssuffix[fin] <- "%"
+      suffix[fin] <- "%"
     }
 
     if (test_types(spec$type, c("c", "u"))) {
-      ssuffix[fin] <- str_c(format_type(x[fin]), ssuffix[fin])
+      suffix[fin] <- str_c(format_type(x[fin]), suffix[fin])
       string[fin] <- ""
     } else {
       # if predefined SI prefix, then divide number by that amount
@@ -184,7 +183,11 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
         x[fin] <- x[fin] * 10 ^ -si_prefix
       }
       # Perform the initial formatting.
-      string[fin] <- format_type(abs(x[fin]), precision)
+      xfmt <- format_type(abs(x[fin]), precision)
+      string[fin] <- xfmt
+      if (!is.null(attr(xfmt, "si_prefix"))) {
+        si_prefix_str[fin] <- attr(xfmt, "si_prefix")
+      }
     }
 
     # find negative values
@@ -215,24 +218,22 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
       # only do signs for +/-Inf
       # I'm not sure whether this is worth it. Maybe handle this by
       # having separate marks for -Inf and +Inf
-      sprefix[neg_inf] <- str_c(if_else(spec$sign == "(", "(", "-"),
-                                sprefix[neg_inf])
-      sprefix[pos_inf] <- str_c(if_else(spec$sign %in% c("-", "("),
-                                        "", spec$sign), sprefix[pos_inf])
-      ssuffix[neg_inf] <- str_c(ssuffix[neg_inf],
+      prefix[neg_inf] <- str_c(if_else(spec$sign == "(", "(", "-"),
+                                prefix[neg_inf])
+      prefix[pos_inf] <- str_c(if_else(spec$sign %in% c("-", "("),
+                                        "", spec$sign), prefix[pos_inf])
+      suffix[neg_inf] <- str_c(suffix[neg_inf],
                                 if_else(spec$sign == "(", ")", ""))
     } else {
-      sprefix <-
+      prefix <-
         str_c(case_when(
           neg_x ~ if_else(spec$sign == "(", "(", "-"),
           fin | (!is.na(x) & x == Inf) ~
           if_else(spec$sign %in% c("-", "("), "", spec$sign),
           TRUE ~ ""
-        ), sprefix)
-      ssuffix <-
-        str_c(ssuffix,
-              if_else(fin & test_types(spec$type, "s"),
-                      names(si_prefix.numeric(x)), ""),
+        ), prefix)
+      suffix <-
+        str_c(suffix, si_prefix_str,
               if_else(neg_x & spec$sign == "(", ")", ""))
     }
 
@@ -241,16 +242,16 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
     if (maybe_suffix & any(fin)) {
       tmp <- str_match(string[fin], "^([0-9]+)(\\.)?(.*)")
       string[fin] <- if_else(is.na(tmp[, 2]), "", tmp[, 2])
-      ssuffix[fin] <- str_c(if_else(is.na(tmp[, 3]), "", locale$decimal_mark),
+      suffix[fin] <- str_c(if_else(is.na(tmp[, 3]), "", locale$decimal_mark),
                             if_else(is.na(tmp[, 4]), "", tmp[, 4]),
-                            ssuffix[fin])
+                            suffix[fin])
     }
 
     # If the fill character is not "0", grouping is applied before padding.
     # if (spec$comma && !(spec$fill != "0" && spec$align != "=")) {
     if (zero) {
       if (!is_empty(spec$width)) {
-        w <- spec$width - str_length(sprefix) - str_length(ssuffix)
+        w <- spec$width - str_length(prefix) - str_length(suffix)
         string[fin] <- str_pad(string[fin], width = w, side = "left",
                                pad = "0")
         # Does it make sense to pad Inf, NaN, NA with 0?
@@ -260,33 +261,33 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
         if (spec$comma & !test_types(spec$type, "c")) {
           # Only group finite values
           string[fin] <-
-            group(string[fin], width = w + str_length(sprefix[fin]))
+            group(string[fin], width = w + str_length(prefix[fin]))
         }
       }
-      string <- str_c(sprefix, string, ssuffix)
+      string <- str_c(prefix, string, suffix)
     } else {
       if (spec$comma & !test_types(spec$type, "c")) {
         string[fin] <- group(string[fin])
       }
       if (!is_empty(spec$width) && !is_empty(spec$fill)) {
         if (spec$align == "<") {
-          string <- str_pad(str_c(sprefix, string, ssuffix), width = spec$width,
+          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
                              side = "right", pad = spec$fill)
         } else if (spec$align == "=") {
-          string <- str_c(sprefix,
-                     str_pad(str_c(string, ssuffix),
-                             width = (spec$width - str_length(sprefix)),
+          string <- str_c(prefix,
+                     str_pad(str_c(string, suffix),
+                             width = (spec$width - str_length(prefix)),
                              side = "left", pad = spec$fill))
         } else if (spec$align == "^") {
-          string <- str_pad(str_c(sprefix, string, ssuffix), width = spec$width,
+          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
                             side = "both", pad = spec$fill)
         } else {
-          string <- str_pad(str_c(sprefix, string, ssuffix), width = spec$width,
+          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
                             side = "left", pad = spec$fill)
         }
       } else {
         # needs to be here because = doesn't paste these before.
-        string <- str_c(sprefix, string, ssuffix)
+        string <- str_c(prefix, string, suffix)
       }
     }
     string[fin] <- replace_numerals(string[fin], numerals = locale$numerals)

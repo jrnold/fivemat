@@ -34,7 +34,7 @@
 SI_PREFIXES <-
   set_names(
     seq(-24L, 24L, 3L),
-    c("y", "z", "a", "f", "p", "n", "\u03BC", "m", " ", "k", "M", "G",
+    c("y", "z", "a", "f", "p", "n", "\u03BC", "m", "", "k", "M", "G",
       "T", "P", "E", "Z", "Y")
   )
 
@@ -63,14 +63,15 @@ si_prefix <- function(x) {
 #'   Empty or missing values map to no strings. Invalid values return \code{NA}.
 #' @export
 si_prefix.character <- function(x) {
-  x[is.na(x) | x %in% c("", "none")] <- " "
+  x[is.na(x) | str_trim(x) %in% c("", "none")] <- ""
   # allow mu to be referred to by name
   x[x == "mu"] <- "\u03BC"
   bad_names <- x[!(x %in% names(SI_PREFIXES))]
   if (!is_empty(bad_names)) {
     stop("Invalid SI Prefixes: ", str_c(bad_names, collapse = ","))
   }
-  SI_PREFIXES[x]
+  # need to use match because the name "" doesn't work with `[`
+  SI_PREFIXES[match(x, names(SI_PREFIXES))]
 }
 
 #' @describeIn si_prefix \code{x} are the exponents of the SI prefixes,

@@ -63,7 +63,13 @@ test_that(paste("fmt_new(\"($\") can output a currency with parentheses",
 
 test_that("fmt_new(\"\") can format negative zero as zero", {
   expect_equal(fmt_new("")(-0), "0")
+})
 
+test_that("fmt_new() formats integers with the d format", {
+  expect_equal(fmt_new(".3")(c(420000000, -4200000)),
+               c("4.2e+08", "-4.2e+06"))
+  expect_equal(fmt_new(".3")(as.integer(c(420000000, -4200000))),
+               c("420000000", "-4200000"))
 })
 
 test_that("fmt_new(\"\") can format special values", {

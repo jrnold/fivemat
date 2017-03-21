@@ -42,17 +42,19 @@ fmt_prefix_auto <- function(x, p) {
   out <- vector("character", length(x))
   out[!fin] <- format(x[!fin])
   d <- fmt_decimal(x[fin], p)
-  i <- d$exponent - si_prefix(as.integer(d$exponent)) + 1L # nolint
+  prefix_exponent <- si_prefix(as.integer(d[["exponent"]]))
+  i <- d[["exponent"]] - prefix_exponent + 1L # nolint
   n <- str_length(d$mantissa) # nolint
   out[fin] <-
     case_when(
       i == n ~ d$mantissa,
-      i > n  ~ str_c(d$mantissa, str_rep("0", i - n + 1L)),
+      i > n  ~ str_c(d$mantissa, str_rep("0", i - n)),
       i > 0L ~ str_c(str_sub(d$mantissa, 1L, i), ".",
                      str_sub(d$mantissa, i + 1L)),
-      TRUE   ~ str_c("0.", str_rep("0", 1L - i),
+      TRUE   ~ str_c("0.", str_rep("0", -i),
                      fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
     )
+  attr(out, "si_prefix") <- names(prefix_exponent)
   out
 }
 
@@ -77,10 +79,6 @@ int2bin <- function(x) {
   }
 }
 
-fmt_b <- function(x, p) map_chr(round(x), int2bin)
-
-fmt_d <- function(x, p) sprintf_("d")(round(x))
-
 fmt_g <- function(x, p, upper = FALSE) {
   x <- signif(x, p)
   k <- exponent(x)
@@ -94,9 +92,9 @@ fmt_types <- list(
   # a and A are from R sprintf
   "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
   "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
-  "b" = fmt_b,
+  "b" = function(x, p) map_chr(round(x), int2bin),
   "c" = function(x, p) as.character(x),
-  "d" = fmt_d,
+  "d" = function(x, p) sprintf_("d")(round(x)),
   "e" = sprintf_("e"),
   "E" = sprintf_("E"),
   "f" = sprintf_("f"),
@@ -104,8 +102,8 @@ fmt_types <- list(
   "G" = function(x, p) fmt_g(x, p, TRUE),
   "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
   "p" = function(x, p) fmt_rounded(x * 100, p),
-  "r" = fmt_rounded,
-  "s" = fmt_prefix_auto,
+  "r" = function(x, p) fmt_rounded(x, p),
+  "s" = function(x, p) fmt_prefix_auto(x, p),
   "u" = function(x, p) intToUtf8(round(x), multiple = TRUE),
   "X" = function(x, p) sprintf_("X")(as.integer(round(x))),
   "x" = function(x, p) sprintf_("x")(as.integer(round(x)))
@@ -318,7 +316,7 @@ format.fmt_spec <- function(x, ...) {
 as.character.fmt_spec <- format.fmt_spec
 
 #' @export
-print.fmt_spec <- function(x, ...) {
+print.fmt_spec <- function(x, ...) { # nocov start
   cat("<fmt_spec>: ", format(x, ...))
   invisible(x)
-}
+} # nocov end

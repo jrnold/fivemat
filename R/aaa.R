@@ -42,22 +42,11 @@ str_rep <- function(x, times = 1L) {
   map2_chr(x, times, f)
 }
 
-#' @importFrom purrr is_empty
-names2 <- function(x) {
-  if (is_empty(names)) {
-    rep("", length(x))
-  } else {
-    out <- names(x)
-    out[is.na(out)] <- ""
-    out
-  }
-}
-
-drop_trailing_zeros <- function(x) {
-  notna <- !is.na(x)
-  x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")
-  x
-}
+# drop_trailing_zeros <- function(x) {
+#   notna <- !is.na(x)
+#   x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")
+#   x
+# }
 
 # make it easier to test types
 test_types <- function(x, types = character(), default = FALSE) {
