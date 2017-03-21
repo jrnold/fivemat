@@ -42,6 +42,13 @@ str_rep <- function(x, times = 1L) {
   map2_chr(x, times, f)
 }
 
+# since precision is just rounding, which is just binning
+# calculate precision with histogram methods
+# auto_precision <- function(x) {
+#   x <- x[!is.na(x)]
+#   floor(log10(diff(range(x)) / nclass.FD(x)))
+# }
+
 # drop_trailing_zeros <- function(x) {
 #   notna <- !is.na(x)
 #   x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")

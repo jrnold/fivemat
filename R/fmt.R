@@ -295,16 +295,19 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
       string <- str_c(string, str_trim(names(si_prefix)))
     }
     string
-  }, class = c("fmt", "function"))
+  },
+  class = c("fmt", "function"))
 }
 
+# nocov start
 #' @export
-print.fmt <- function(x, ...) { # nocov start
+print.fmt <- function(x, ...) {
   cat("<fmt>\n")
   print(environment(x)$spec)
   print(environment(x)$locale)
   invisible(x)
-} # nocov end
+}
+# nocov end
 
 #' @rdname fmt_new
 #' @export

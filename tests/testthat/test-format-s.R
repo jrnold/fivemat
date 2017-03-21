@@ -1,6 +1,7 @@
 context("format s")
 
-test_that("fmt_new(\"s\") outputs SI-prefix notation with default precision 6", {
+test_that(paste("fmt_new(\"s\") outputs SI-prefix notation with",
+                "default precision 6"), {
   f <- fmt_new("s")
   expect_equal(f(0), "0.00000")
   expect_equal(f(1), "1.00000")
@@ -16,7 +17,8 @@ test_that("fmt_new(\"s\") outputs SI-prefix notation with default precision 6", 
   expect_equal(f(.000001), "1.00000\u03BC")
 })
 
-test_that("fmt_new(\"[.precision]s\") outputs SI-prefix notation with precision significant digits", {
+test_that(paste("fmt_new(\"[.precision]s\") outputs SI-prefix",
+                "notation with precision significant digits"), {
   f <- fmt_new(".3s")
   expect_equal(f(0), "0.00")
   expect_equal(f(1), "1.00")
@@ -113,7 +115,8 @@ test_that("fmt_new(\"$s\") outputs SI-prefix notation with a currency symbol", {
   expect_equal(f(.009995), "$9.995m")
 })
 
-test_that("fmt_new(\"s\") SI-prefix notation precision is consistent for small and large numbers", {
+test_that(paste("fmt_new(\"s\") SI-prefix notation precision is",
+                "consistent for small and large numbers"), {
   f <- fmt_new(".0s")
   expect_equal(f(1e-5), "10\u03BC")
   expect_equal(f(1e-4), "100\u03BC")

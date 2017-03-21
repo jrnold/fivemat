@@ -74,8 +74,9 @@ fmt_default_locale <- function() {
   loc
 }
 
+# nocov start
 #' @export
-print.fmt_locale <- function(x, ...) { # nocov start
+print.fmt_locale <- function(x, ...) {
   cat("<fmt_locale>\n")
   cat("Grouping:       ", str_c(x$grouping, collapse = ","), "\n")
   cat("Grouping Mark:  ", x$grouping_mark, "\n")
@@ -87,4 +88,5 @@ print.fmt_locale <- function(x, ...) { # nocov start
     cat("Numerals:      ", str_c(0:9, collapse = ", "), "\n")
   }
   cat("Inf: ", x$inf_mark, ", NA: ", x$na_mark, ", NaN", x$nan_mark, "\n")
-} # nocov end
+}
+# nocov end

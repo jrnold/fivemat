@@ -315,8 +315,10 @@ format.fmt_spec <- function(x, ...) {
 #' @export
 as.character.fmt_spec <- format.fmt_spec
 
+# nocov start
 #' @export
-print.fmt_spec <- function(x, ...) { # nocov start
+print.fmt_spec <- function(x, ...) {
   cat("<fmt_spec>: ", format(x, ...))
   invisible(x)
-} # nocov end
+}
+# nocov end

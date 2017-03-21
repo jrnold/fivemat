@@ -23,4 +23,3 @@ test_that("fmt_new(\"#.2A\") works as expected", {
                c("0x1.00P+0", "0x1.40P+1", "0x1.40P+3", "0x1.00P+4",
                  "NA", "NaN", "Inf", "-Inf"))
 })
-
