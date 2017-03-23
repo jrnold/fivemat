@@ -29,3 +29,19 @@ na_else <- function(x, default) {
 test_types <- function(x, types = character(), default = FALSE) {
   (default & is_empty(x)) | (x %==% types)
 }
+
+remove_leading_zeros <- function(x) {
+  # cases: \d+, \d+.\d+(e[+-]\d+), \d+e\+\d+
+  str_replace(x, "^0+", "")
+}
+
+drop_trailing_zeros <- function(x) {
+  # cases: \d+, \d+.\d+(e[+-]\d+), \d+e\+\d+
+  # remove e+00 or e-00
+  x <- str_replace(x, regex("e[+-]0+$", ignore_case = TRUE))
+  # remove 9.9000 or 9.9000e+01
+  # don't remove 9000
+  x <- str_replace(x, regex("(\\.)(\\d*)0+($|[e])", ignore_case = TRUE),
+                   "\\1\\2\\3")
+
+}
