@@ -25,37 +25,23 @@ na_else <- function(x, default) {
   if_else(!is.na(x), x, default)
 }
 
-# version of strrep that doesn't error if times < 0
-#' @importFrom stringi stri_paste_list
-#' @importFrom purrr rerun
-#' @importFrom purrr map2_chr
-str_rep <- function(x, times = 1L) {
-  f <- function(el, times) {
-    if (times < 0) {
-      NA_character_
-    } else if (times == 0) {
-      ""
-    } else {
-      stri_paste_list(rerun(times, el), collapse = "")
-    }
-  }
-  map2_chr(x, times, f)
-}
-
-# since precision is just rounding, which is just binning
-# calculate precision with histogram methods
-# auto_precision <- function(x) {
-#   x <- x[!is.na(x)]
-#   floor(log10(diff(range(x)) / nclass.FD(x)))
-# }
-
-# drop_trailing_zeros <- function(x) {
-#   notna <- !is.na(x)
-#   x[notna] <- str_replace(x[notna], "(e[+-]|\\.)?0+$", "")
-#   x
-# }
-
 # make it easier to test types
 test_types <- function(x, types = character(), default = FALSE) {
   (default & is_empty(x)) | (x %==% types)
+}
+
+remove_leading_zeros <- function(x) {
+  # cases: \d+, \d+.\d+(e[+-]\d+), \d+e\+\d+
+  str_replace(x, "^0+", "")
+}
+
+drop_trailing_zeros <- function(x) {
+  # cases: \d+, \d+.\d+(e[+-]\d+), \d+e\+\d+
+  # remove e+00 or e-00
+  x <- str_replace(x, regex("e[+-]0+$", ignore_case = TRUE))
+  # remove 9.9000 or 9.9000e+01
+  # don't remove 9000
+  x <- str_replace(x, regex("(\\.)(\\d*)0+($|[e])", ignore_case = TRUE),
+                   "\\1\\2\\3")
+
 }
