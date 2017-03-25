@@ -73,14 +73,23 @@ sprintf_ <- function(format) {
   }
 }
 
+# integer to binary
+# @param x single integer value
+# @return binary representation as character string of abs(x)
+#' @importFrom purrr map2
+#' @importFrom stringi stri_flatten
 int2bin <- function(x) {
-  if (x == 0) {
-    "0"
-  } else {
-    out <- rev(as.integer(intToBits(x)))
-    i <- purrr::detect_index(out, as.logical)
-    str_c(out[seq(i, length(out), by = 1)], collapse = "")
+  x <- abs(as.integer(x))
+  out <- vector("list", length(x))
+  is_zero <- x == 0L
+  out[is_zero] <- list("0")
+  k <- floor(log2(x[!is_zero])) + 1L
+  f <- function(i, j) {
+    idx <- seq(from = j, to = 1L, by = -1L)
+    stri_flatten(as.integer(intToBits(i))[idx])
   }
+  out[!is_zero] <- map2(x[!is_zero], k, f)
+  out
 }
 
 fmt_g <- function(x, p, upper = FALSE) {
@@ -90,6 +99,17 @@ fmt_g <- function(x, p, upper = FALSE) {
           sprintf_(if (upper) "E" else "e")(x, p - 1L),
           sprintf_("f")(x, p - k - 1L))
 }
+
+# integer types
+fmt_types_int <- c("b", "d", "o", "x", "X")
+fmt_types_dblf <- c("%", "f", "F", "s")
+fmt_types_dblp <- c("a", "A", "e", "E", "g", "G", "r")
+fmt_types_chr <- c("c")
+# Derived types
+# s -> transform by SI, f
+# p,% -> transform by % then f or e
+# uses both significant digits and decimal
+# g not derived since formatting is conditional
 
 fmt_types <- list(
   "%" = function(x, p) sprintf_("f")(x * 100, p),
@@ -156,6 +176,14 @@ as_fmt_spec <- function(x = character()) {
   res$type <- if (is.na(m[9])) NULL else m[9]
   purrr::invoke(fmt_spec, res)
 }
+
+Format <- R6Class("Format", {
+  public = list(
+    format = function(x, spec) {
+      base::format(x)
+    }
+  )
+})
 
 #' Format Specification
 #'
@@ -259,15 +287,15 @@ as_fmt_spec <- function(x = character()) {
 #' @export
 #' @importFrom stringr str_to_lower
 #' @importFrom assertthat is.flag is.number
-fmt_spec <- function(fill = " ",
+fmt_spec <- function(type = "*",
+                     fill = " ",
                      align = c(">", "<", "^", "="),
                      sign = c("-", "+", "(", " "),
                      symbol = NULL,
                      zero = FALSE,
                      width = NULL,
                      comma = FALSE,
-                     precision = NULL,
-                     type = NULL) {
+                     precision = NULL) {
   assert_that(is.string(fill))
   align <- match.arg(align)
   sign <- match.arg(sign)
@@ -284,16 +312,24 @@ fmt_spec <- function(fill = " ",
               symbol = symbol, width = width,
               comma = comma, precision = precision, type = type)
   # The "n" type is an alias for ",g".
-  if (!is.null(type)) {
-    if (res$type == "n") {
-      res$comma <- TRUE
-      res$type <- "g"
-    } else if (type == "N") {
-      res$comma <- TRUE
-      res$type <- "G"
-    } else if (!type %in% names(fmt_types)) {
-      stop("Type `\"", type, "\" is not recognized.", call. = FALSE)
-    }
+  if (res$type == "n") {
+    res$comma <- TRUE
+    res$type <- "g"
+  } else if (type == "N") {
+    res$comma <- TRUE
+    res$type <- "G"
+  } else if (type == "i") {
+    res$type <- "d"
+  } else if (!type %in% names(fmt_types)) {
+    stop("Type `\"", type, "\" is not recognized.", call. = FALSE)
+  }
+  precision <- if (is.null(precision)) {
+    # defaults from d3-format
+    # perhaps use 4 instead as in R
+    if (type == "*") 12L else 6L
+  } else {
+    # clamp precision to: [0, 20] for fixed, [1, 21] for precision
+    max(0L, min(20L, spec$precision)) + (out$type %in% fmt_types_dblp)
   }
   # If zero fill is specified, padding goes after sign and before digits.
   if (zero) {

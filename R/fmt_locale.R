@@ -17,9 +17,13 @@
 #'    If named, the names must be `"0"`, ..., `"9"`. If not named, then the
 #'    vector is assumed to be ordered 0 to 9; e.g. `numerals[1]` is the numeral
 #'    for "0", `numerals[2]` is the numeral for "1" and so on.
-#' @param inf_mark Character: Mark to use for infinity (\code{Inf}).
-#' @param na_mark Character: Mark to use for missing values, (\code{NA}).
-#' @param nan_mark Character: Mark to use for not-a-number values, (\code{NaN}).
+#' @param inf_mark Character vector of length 1: Mark to use for infinity (\code{Inf}).
+#' @param na_mark Character vector of length 1: Mark to use for missing values, (\code{NA}).
+#' @param nan_mark Character vector of length 1: Mark to use for not-a-number values, (\code{NaN}).
+#' @param paren_marks Character vector of length 2: Marks to use for left and right
+#'    parens when using parentheses for negative signs.
+#'
+#'
 #' @return  An object of class `"fmt_locale"`, which is a named list with elements: `decimal`, `thousands`, `grouping`, `currency`, and `numerals` (optional).
 #' @export
 fmt_locale <- function(decimal_mark = ".",
@@ -29,7 +33,11 @@ fmt_locale <- function(decimal_mark = ".",
                        numerals = NULL,
                        inf_mark = "Inf",
                        na_mark = "NA",
-                       nan_mark = "NaN") {
+                       nan_mark = "NaN",
+                       paren_marks = c("(", ")"),
+                       percent_mark = "%",
+                       plus_mark = "+",
+                       minus_mark = "-") {
   assert_that(is.string(decimal_mark))
   assert_that(is.string(grouping_mark))
   assert_that(is.numeric(grouping))
@@ -57,7 +65,11 @@ fmt_locale <- function(decimal_mark = ".",
       numerals = numerals,
       inf_mark = inf_mark,
       na_mark = na_mark,
-      nan_mark = nan_mark
+      nan_mark = nan_mark,
+      plus_mark = plus_mark,
+      minus_mark = minus_mark,
+      paren_marks = paren_marks,
+      percent_mark = percent_mark
     ),
     class = "fmt_locale"
   )

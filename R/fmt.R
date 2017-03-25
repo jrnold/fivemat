@@ -111,13 +111,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
   # or clamp the specified precision to the supported range.
   # For significant precision, it must be in [1, 21].
   # For fixed precision, it must be in [0, 20].
-  spec$precision <- if (is.null(spec$precision)) {
-    if (test_types(spec$type, default = TRUE)) 12L else 6L
-  } else if (test_types(spec$type, c("g", "G", "p", "r", "s"))) {
-    max(1L, min(21L, spec$precision))
-  } else {
-    max(0L, min(20L, spec$precision))
-  }
+
   precision <- spec$precision
 
   group <- function(x, width = 0L) {
@@ -141,7 +135,35 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
     string <- rep("", n)
     si_prefix_str <- rep("", n)
 
-    if (test_types(spec$type, "c")) {
+    # Conversions
+    # if predefined SI prefix, then divide number by that amount
+    if (!is.null(si_prefix)) {
+      x[fin] <- x[fin] * 10 ^ -si_prefix
+    }
+    # round to integer or significance levels so that
+    # negative values can be identified
+    if (spec$type %in% c("b", "d", "o", "u", "x", "X")) {
+      # integer types
+      x <- as.integer(round(x))
+    } else if (test_types(spec$type, c("c"))) {
+      # character types
+      x <- as.character(x)
+    } else {
+      x <- as.numeric(x)
+      # round to significance
+      if (x %in% types_dblf) {
+        x <- round(x, precision)
+      } else {
+        x <- signif(x, precision)
+      }
+    }
+
+    # identify special values
+    if (is.character(x)) {
+      is_na <- is.na(x)
+      fin <- !is_na
+      pos_inf <- neg_inf <- is_nan <- rep(FALSE, n)
+    } else if (is.integer(x)) {
       is_na <- is.na(x)
       fin <- !is_na
       pos_inf <- neg_inf <- is_nan <- rep(FALSE, n)
@@ -156,6 +178,13 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
       string[pos_inf | neg_inf] <- locale$inf_mark %||% "Inf"
     }
     string[is_na] <- locale$na_mark %||% "NA"
+
+    # Identify zeros and negative numbers
+    if (is.numeric(x)) {
+      is_neg <- x < 0
+    } else {
+      is_neg <- rep(FALSE, n)
+    }
 
     # need to ensure that prefixes aren't put before special values
     if (spec$symbol %==% "$") {
@@ -174,14 +203,11 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
       suffix[fin] <- "%"
     }
 
+    # Initial formatting
     if (test_types(spec$type, c("c", "u"))) {
       suffix[fin] <- str_c(format_type(x[fin]), suffix[fin])
       string[fin] <- ""
     } else {
-      # if predefined SI prefix, then divide number by that amount
-      if (!is.null(si_prefix)) {
-        x[fin] <- x[fin] * 10 ^ -si_prefix
-      }
       # Perform the initial formatting.
       xfmt <- format_type(abs(x[fin]), precision)
       string[fin] <- xfmt
