@@ -3,9 +3,17 @@
 #' @importFrom purrr keep map_chr is_empty
 #' @noRd
 fmt_group <- function(x, grouping = NULL, sep = ",") {
-  if (is_empty(grouping)) return(x)
-  if (is_empty(x)) return(character())
-  intvls <- rep_len(grouping, max(str_length(x)))
+  if (is_empty(grouping)) {
+    return(x)
+  }
+  if (is_empty(x)) {
+    return(character())
+  }
+  # split integer from digits or exponent
+  # use ?= so that the splitting part is kept
+  split_pattern <- "(?=\\.|[eE][+-])"
+  x_split <- str_split_fixed(x, split_pattern, 2L)
+  intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
   start <- cumsum(c(1L, intvls[-length(intvls)]))
   end <- start + intvls - 1L
   f <- function(x, start, end) {
@@ -13,8 +21,191 @@ fmt_group <- function(x, grouping = NULL, sep = ",") {
     res <- stri_reverse(str_c(res, collapse = sep))
     res
   }
-  map_chr(x, f, start = start, end = end)
+  str_c(map_chr(x_split[ , 1], f, start = start, end = end),
+        x_split[ , 2])
 }
+
+# Truncate leading zeros
+trunc_zeros <- function(x, width = NULL) {
+  if (is.null(width)) {
+    out <- str_replace(x, "^[0,]*", "")
+  } else {
+    out <- str_replace(x, str_c("^([0,]*)(.{", width, ",})"), "\\2")
+  }
+  str_replace(out, "^,", " ")
+}
+
+fmt_pad <- function(string, left, right, align = "<",
+                    fill = NULL, width = NULL) {
+  # null width uses longest string
+  if (is.null(width)) {
+    lens <- rowsums(cbind(str_length(string),
+                          str_length(left),
+                          str_length(right)))
+    width <- max(lens)
+  }
+  if (align == "=") {
+    str_c(left, str_pad(str_c(string, right),
+                        width = width - str_length(left),
+                        pad = fill))
+  } else {
+    side <- switch(align,
+                   "<" = "right",
+                   "^" = "both",
+                   ">" = "left")
+    str_pad(str_c(left, string, right), width = width,
+            side = side, pad = fill)
+  }
+}
+
+fmt_init <- function(x) {
+  tibble(value = x,
+         left = "",
+         right = "",
+         center = "")
+}
+
+fmt_init_int <- function(x) {
+  out <- fmt_init(x)
+  out[["value"]] <- as.integer(x)
+  out[["not_na"]] <- !is.finite(out[["value"]])
+  out[["na"]] <- is.na(out[["value"]])
+  out[["negative"]] <- !out[["na"]] & out[["value"]] < 0
+  out
+}
+
+fmt_init_dbl <- function(x, p = 6, fixed = FALSE) {
+  out <- fmt_init(x)
+  f <- if (fixed) base::round else base::signif
+  out[["value"]] <- f(as.numeric(x), p)
+  out[["not_na"]] <- !is.finite(out[["value"]])
+  out[["nan"]] <- is.nan(out[["nan"]])
+  out[["na"]] <- is.na(out[["value"]]) & !out[["nan"]]
+  out[["inf"]] <- is.infinite(out[["value"]])
+  out[["negative"]] <- !out[["na"]] & !out[["nan"]] & out[["value"]] < 0
+  out
+}
+
+fmt_init_chr <- function(x) {
+  out <- fmt_init(x)
+  out[["value"]] <- as.character(x)
+  out
+}
+
+fmt_init_si <- function(x, si_prefix) {
+  prefix <- si_prefix(si_prefix)
+  out <- fmt_init_dbl(x / 10 ^ prefix)
+  out[["right"]] <- names(si_prefix)
+  out
+}
+
+fmt_inf <- function(x, spec, locale) {
+  x[["center"]][x[["is_inf"]]] <- locale$inf_mark
+  x
+}
+
+fmt_na <- function(x, spec, locale) {
+  x[["center"]][x[["is_na"]]] <- locale$na_mark
+  x
+}
+
+fmt_nan <- function(x, spec, locale) {
+  x[["center"]][x[["is_nan"]]] <- locale$nan_mark
+  x
+}
+
+fmt_minus <- function(x, minus, locale) {
+  if (minus == "-") {
+    out[["left"]] <- str_c(out[["left"]], if_else(out[["negative"]], "-", ""))
+  } else if (minus == "+") {
+    out[["left"]] <- str_c(out[["left"]], if_else(out[["negative"]], "-", "+"))
+  } else if (minus == " ") {
+    out[["left"]] <- str_c(out[["left"]], if_else(out[["negative"]], "-", " "))
+  } else if (minus == "(") {
+    out[["left"]] <- str_c(out[["left"]], if_else(out[["negative"]], "(", ""))
+    out[["right"]] <- str_c(out[["left"]], if_else(out[["negative"]], ")", ""))
+  }
+  out
+}
+
+fmt_currency <- function(x, locale) {
+  out[["left"]] <- str_c(locale[["currency"]][1], out[["left"]])
+  out[["left"]] <- str_c(locale[["currency"]][2], out[["right"]])
+  out
+}
+
+fmt_type_x <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_init_int(x)
+  pat <- str_c("%", if (spec$symbol == "#") "#" else "",
+               if (capitalize) "x" else "X")
+  out[["center"]][out[["not_na"]]] <-
+    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  out
+}
+
+fmt_type_o <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_init_int(x)
+  out[["center"]][out[["not_na"]]] <-
+    str_c(if (spec$symbol == "#") "0o" else "",
+          sprintf("%o", abs(out[["value"]][out[["not_na"]]])))
+  out
+}
+
+fmt_type_b <- function(x, spec, locale) {
+  out <- fmt_init_int(x)
+  out[["center"]][out[["not_na"]]] <-
+    str_c(if (spec$symbol == "#") "0b" else "",
+          int2bin(abs(out[["value"]][out[["not_na"]]])))
+  out
+}
+
+fmt_type_d <- function(x, spec, locale) {
+  out <- fmt_init_int(x)
+  out[["center"]][out[["not_na"]]] <-
+    str_c(sprintf("%d", abs(out[["value"]][out[["not_na"]]])))
+  out
+}
+
+fmt_type_e <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_init_dbl(x)
+  p <- spec$precision
+  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
+               if (capitalize) "e" else "E")
+  out[["center"]][out[["not_na"]]] <-
+    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  out
+}
+
+fmt_type_f <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_init_dbl(x)
+  p <- spec$precision
+  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p), "f")
+  out[["center"]][out[["not_na"]]] <-
+    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  out
+}
+
+fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_init_dbl(x)
+  p <- spec$precision
+  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
+               if (capitalize) "g" else "G")
+  out[["center"]][out[["not_na"]]] <-
+    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  out
+}
+
+## TODO: r, p, %, s
+## init
+## format value
+## format prefix
+## format postfix
+## grouping
+## pad
+## postprocessing
+
+
+
 
 #' Format numbers
 #'
@@ -105,8 +296,6 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
   } else {
     format_type <- fmt_types[[spec$type]]
   }
-  maybe_suffix <- is_empty(spec$type) || # nolint
-      {spec$type %==% c("%", "d", "e", "E", "f", "g", "G", "p", "r", "s")} # nolint
 
   # or clamp the specified precision to the supported range.
   # For significant precision, it must be in [1, 21].
@@ -114,208 +303,7 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
 
   precision <- spec$precision
 
-  group <- function(x, width = 0L) {
-    if (zero) {
-      # for sanity in regexes, replace , afterwardsb
-      x <- fmt_group(x, locale$grouping, ",")
-      # remove leading 0's and , above the width
-      x <- str_replace(x, paste0("^[0,]+((?:0,|[^,]).{", width - 1L, "})$"),
-                       "\\1")
-      x <- str_replace_all(x, ",", locale$grouping_mark)
-      x
-    } else {
-      fmt_group(x, locale$grouping, locale$grouping_mark)
-    }
-  }
 
-  structure(function(x) {
-    n <- length(x)
-    prefix <- rep("", n)
-    suffix <- rep("", n)
-    string <- rep("", n)
-    si_prefix_str <- rep("", n)
-
-    # Conversions
-    # if predefined SI prefix, then divide number by that amount
-    if (!is.null(si_prefix)) {
-      x[fin] <- x[fin] * 10 ^ -si_prefix
-    }
-    # round to integer or significance levels so that
-    # negative values can be identified
-    if (spec$type %in% c("b", "d", "o", "u", "x", "X")) {
-      # integer types
-      x <- as.integer(round(x))
-    } else if (test_types(spec$type, c("c"))) {
-      # character types
-      x <- as.character(x)
-    } else {
-      x <- as.numeric(x)
-      # round to significance
-      if (x %in% types_dblf) {
-        x <- round(x, precision)
-      } else {
-        x <- signif(x, precision)
-      }
-    }
-
-    # identify special values
-    if (is.character(x)) {
-      is_na <- is.na(x)
-      fin <- !is_na
-      pos_inf <- neg_inf <- is_nan <- rep(FALSE, n)
-    } else if (is.integer(x)) {
-      is_na <- is.na(x)
-      fin <- !is_na
-      pos_inf <- neg_inf <- is_nan <- rep(FALSE, n)
-    } else {
-      fin <- is.finite(x)
-      pos_inf <- is.infinite(x) & x > 0
-      neg_inf <- is.infinite(x) & x < 0
-      is_nan <- is.nan(x)
-      is_na <- is.na(x) & !is.nan(x)
-      # Handle special values: NA, NaN, +/-Inf
-      string[is_nan] <- locale$nan_mark %||% "NaN"
-      string[pos_inf | neg_inf] <- locale$inf_mark %||% "Inf"
-    }
-    string[is_na] <- locale$na_mark %||% "NA"
-
-    # Identify zeros and negative numbers
-    if (is.numeric(x)) {
-      is_neg <- x < 0
-    } else {
-      is_neg <- rep(FALSE, n)
-    }
-
-    # need to ensure that prefixes aren't put before special values
-    if (spec$symbol %==% "$") {
-      prefix[fin] <- locale$currency[1]
-    } else if (spec$symbol %==% "#") {
-      if (test_types(spec$type, c("b", "o", "x", "X"))) {
-        prefix[fin] <- str_c("0", str_to_lower(spec$type))
-      } else if (test_types(spec$type, c("a", "A"))) {
-        prefix[fin] <- str_c("0x")
-      }
-    }
-
-    if (spec$symbol %==% "$") {
-      suffix[fin] <- locale$currency[2]
-    } else if (test_types(spec$type, c("%", "p"))) {
-      suffix[fin] <- "%"
-    }
-
-    # Initial formatting
-    if (test_types(spec$type, c("c", "u"))) {
-      suffix[fin] <- str_c(format_type(x[fin]), suffix[fin])
-      string[fin] <- ""
-    } else {
-      # Perform the initial formatting.
-      xfmt <- format_type(abs(x[fin]), precision)
-      string[fin] <- xfmt
-      if (!is.null(attr(xfmt, "si_prefix"))) {
-        si_prefix_str[fin] <- attr(xfmt, "si_prefix")
-      }
-    }
-
-    # find negative values
-    neg_x <- neg_inf
-    if (!test_types(spec$type, c("c", "u"))) {
-      neg_x <- neg_x | (fin & x < 0)
-      # negative values
-      # If a negative value rounds to zero during formatting, treat as positive.
-      is_zero <- rep(FALSE, n)
-      is_zero[fin] <- if (test_types(spec$type,
-                                     c("%", "d", "e", "E",
-                                       "f", "g", "G", "p", "r", "s"), TRUE)) {
-        as.numeric(string[fin]) == 0
-      } else if (test_types(spec$type, c("x", "X"))) {
-        strtoi(string[fin], base = 16L) == 0
-      } else if (test_types(spec$type, c("o"))) {
-        strtoi(string[fin], base = 8L) == 0
-      } else if (test_types(spec$type, c("b"))) {
-        strtoi(string[fin], base = 2L) == 0
-      } else if (test_types(spec$type, c("a", "A"))) {
-        as.numeric(str_c("0x", string[fin])) == 0
-      }
-      neg_x <- neg_x & !is_zero
-    }
-
-    # Compute Signs
-    if (test_types(spec$type, c("c", "u"))) {
-      # only do signs for +/-Inf
-      # I'm not sure whether this is worth it. Maybe handle this by
-      # having separate marks for -Inf and +Inf
-      prefix[neg_inf] <- str_c(if_else(spec$sign == "(", "(", "-"),
-                                prefix[neg_inf])
-      prefix[pos_inf] <- str_c(if_else(spec$sign %in% c("-", "("),
-                                        "", spec$sign), prefix[pos_inf])
-      suffix[neg_inf] <- str_c(suffix[neg_inf],
-                                if_else(spec$sign == "(", ")", ""))
-    } else {
-      prefix <-
-        str_c(case_when(
-          neg_x ~ if_else(spec$sign == "(", "(", "-"),
-          fin | (!is.na(x) & x == Inf) ~
-          if_else(spec$sign %in% c("-", "("), "", spec$sign),
-          TRUE ~ ""
-        ), prefix)
-      suffix <-
-        str_c(suffix, si_prefix_str,
-              if_else(neg_x & spec$sign == "(", ")", ""))
-    }
-
-    # Break the formatted value into the integer “value” part that can be
-    # grouped, and fractional or exponential “suffix” part that is not.
-    if (maybe_suffix & any(fin)) {
-      tmp <- str_match(string[fin], "^([0-9]+)(\\.)?(.*)")
-      string[fin] <- if_else(is.na(tmp[, 2]), "", tmp[, 2])
-      suffix[fin] <- str_c(if_else(is.na(tmp[, 3]), "", locale$decimal_mark),
-                            if_else(is.na(tmp[, 4]), "", tmp[, 4]),
-                            suffix[fin])
-    }
-
-    # If the fill character is not "0", grouping is applied before padding.
-    # if (spec$comma && !(spec$fill != "0" && spec$align != "=")) {
-    if (zero) {
-      if (!is_empty(spec$width)) {
-        w <- spec$width - str_length(prefix) - str_length(suffix)
-        string[fin] <- str_pad(string[fin], width = w, side = "left",
-                               pad = "0")
-        # Does it make sense to pad Inf, NaN, NA with 0?
-        # Not really, but it doesn't make sense to pad then in many other cases
-        string[!fin] <- str_pad(string[!fin], width = w,
-                                side = "left", pad = " ")
-        if (spec$comma & !test_types(spec$type, "c")) {
-          # Only group finite values
-          string[fin] <-
-            group(string[fin], width = w + str_length(prefix[fin]))
-        }
-      }
-      string <- str_c(prefix, string, suffix)
-    } else {
-      if (spec$comma & !test_types(spec$type, "c")) {
-        string[fin] <- group(string[fin])
-      }
-      if (!is_empty(spec$width) && !is_empty(spec$fill)) {
-        if (spec$align == "<") {
-          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
-                             side = "right", pad = spec$fill)
-        } else if (spec$align == "=") {
-          string <- str_c(prefix,
-                     str_pad(str_c(string, suffix),
-                             width = (spec$width - str_length(prefix)),
-                             side = "left", pad = spec$fill))
-        } else if (spec$align == "^") {
-          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
-                            side = "both", pad = spec$fill)
-        } else {
-          string <- str_pad(str_c(prefix, string, suffix), width = spec$width,
-                            side = "left", pad = spec$fill)
-        }
-      } else {
-        # needs to be here because = doesn't paste these before.
-        string <- str_c(prefix, string, suffix)
-      }
-    }
     string[fin] <- replace_numerals(string[fin], numerals = locale$numerals)
     if (!is.null(si_prefix)) {
       string <- str_c(string, str_trim(names(si_prefix)))
