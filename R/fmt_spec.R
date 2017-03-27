@@ -15,16 +15,10 @@ fmt_decimal <- function(x, p) {
 #' @noRd
 fmt_rounded <- function(x, p) {
   if (is_empty(x)) return(character())
-  d <- fmt_decimal(x, p) # nolint
-  case_when(
-    !is.finite(x) ~ base::format(x),
-    d$exponent < 0 ~ str_c("0.", stri_dup("0", -d$exponent - 1L), d$mantissa),
-    str_length(d$mantissa) > (d$exponent + 1L) ~
-      str_c(str_sub(d$mantissa, 1L, d$exponent + 1L), ".",
-            str_sub(d$mantissa, d$exponent + 2L)),
-    TRUE ~ str_c(d$mantissa,
-                 stri_dup("0", d$exponent - str_length(d$mantissa) + 1L))
-  )
+  x <- signif(x, p)
+  k <- -exponent(x) + p - 1L
+  f <- function(i, j) sprintf(str_c("%.", j, "f"), i)
+  map2_chr(x, k, f)
 }
 
 # like precision, but drops insignificant trailing 0's
