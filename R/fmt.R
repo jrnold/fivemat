@@ -1,13 +1,11 @@
 # split x into mantissa and exponent
 fmt_decimal <- function(x, p) {
-  if (is_empty(x)) return(character())
-  # need to handle NA, NaN, Inf
-  strx <- character(length(x))
-  strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
-                                abs(x[is.finite(x)]), p - 1L)
-  split <- stringr::str_split_fixed(strx, "e", 2)
-  tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
-                 exponent = as.integer(split[, 2]))
+  out <- tibble::tibble(
+    value = x,
+    exponent = exponent(value),
+    mantissa = as.integer(round(value * 10 ^ (-exponent - 1 + p)))
+  )
+  out
 }
 
 #' @importFrom stringi stri_dup
