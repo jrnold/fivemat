@@ -1,63 +1,3 @@
-# split x into mantissa and exponent
-fmt_decimal <- function(x, p) {
-  if (is_empty(x)) return(character())
-  # need to handle NA, NaN, Inf
-  strx <- character(length(x))
-  strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
-                                abs(x[is.finite(x)]), p - 1L)
-  split <- stringr::str_split_fixed(strx, "e", 2)
-  tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
-                 exponent = as.integer(split[, 2]))
-}
-
-#' @importFrom stringi stri_dup
-#' @importFrom dplyr case_when
-#' @noRd
-fmt_rounded <- function(x, p) {
-  if (is_empty(x)) return(character())
-  x <- signif(x, p)
-  k <- -exponent(x) + p - 1L
-  f <- function(i, j) sprintf(str_c("%.", j, "f"), i)
-  map2_chr(x, k, f)
-}
-
-# like precision, but drops insignificant trailing 0's
-fmt_default <- function(x, ...) {
-  UseMethod("fmt_default")
-}
-
-fmt_default.numeric <- function(x, p, ...) {
-  sprintf_("g")(x, p)
-}
-
-fmt_default.integer <- function(x, ...) {
-  sprintf_("d")(x)
-}
-
-#' @importFrom stringi stri_dup
-#' @importFrom dplyr case_when
-#' @noRd
-fmt_prefix_auto <- function(x, p) {
-  fin <- is.finite(x)
-  out <- vector("character", length(x))
-  out[!fin] <- format(x[!fin])
-  d <- fmt_decimal(x[fin], p)
-  prefix_exponent <- si_prefix(as.integer(d[["exponent"]]))
-  i <- d[["exponent"]] - prefix_exponent + 1L # nolint
-  n <- str_length(d$mantissa) # nolint
-  out[fin] <-
-    case_when(
-      i == n ~ d$mantissa,
-      i > n  ~ str_c(d$mantissa, stri_dup("0", i - n)),
-      i > 0L ~ str_c(str_sub(d$mantissa, 1L, i), ".",
-                     str_sub(d$mantissa, i + 1L)),
-      TRUE   ~ str_c("0.", stri_dup("0", -i),
-                     fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
-    )
-  attr(out, "si_prefix") <- names(prefix_exponent)
-  out
-}
-
 sprintf_ <- function(format) {
   force(format)
   function(x, p = NULL) {
@@ -87,47 +27,6 @@ int2bin <- function(x) {
   out[!is_zero] <- map2(x[!is_zero], k, f)
   out
 }
-
-fmt_g <- function(x, p, upper = FALSE) {
-  x <- signif(x, p)
-  k <- exponent(x)
-  if_else(k < -4 | k >= p,
-          sprintf_(if (upper) "E" else "e")(x, p - 1L),
-          sprintf_("f")(x, p - k - 1L))
-}
-
-# integer types
-fmt_types_int <- c("b", "d", "o", "x", "X")
-fmt_types_dblf <- c("%", "f", "F", "s")
-fmt_types_dblp <- c("a", "A", "e", "E", "g", "G", "r")
-fmt_types_chr <- c("c")
-# Derived types
-# s -> transform by SI, f
-# p,% -> transform by % then f or e
-# uses both significant digits and decimal
-# g not derived since formatting is conditional
-
-fmt_types <- list(
-  "%" = function(x, p) sprintf_("f")(x * 100, p),
-  # a and A are from R sprintf
-  "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
-  "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
-  "b" = function(x, p) map_chr(round(x), int2bin),
-  "c" = function(x, p) as.character(x),
-  "d" = function(x, p) sprintf("%d", as.integer(round(x))),
-  "e" = sprintf_("e"),
-  "E" = sprintf_("E"),
-  "f" = sprintf_("f"),
-  "g" = function(x, p) fmt_g(x, p, FALSE),
-  "G" = function(x, p) fmt_g(x, p, TRUE),
-  "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
-  "p" = function(x, p) fmt_rounded(x * 100, p),
-  "r" = function(x, p) fmt_rounded(x, p),
-  "s" = function(x, p) fmt_prefix_auto(x, p),
-  "u" = function(x, p) intToUtf8(round(x), multiple = TRUE),
-  "X" = function(x, p) sprintf_("X")(as.integer(round(x))),
-  "x" = function(x, p) sprintf_("x")(as.integer(round(x)))
-)
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
 #' @importFrom stringr regex
@@ -172,14 +71,6 @@ as_fmt_spec <- function(x = character()) {
   res$type <- if (is.na(m[9])) NULL else m[9]
   purrr::invoke(fmt_spec, res)
 }
-
-Format <- R6Class("Format", {
-  public = list(
-    format = function(x, spec) {
-      base::format(x)
-    }
-  )
-})
 
 #' Format Specification
 #'
