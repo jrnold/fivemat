@@ -203,10 +203,6 @@ fmt_spec <- function(type = "*",
     # defaults from d3-format
     # perhaps use 4 instead as in R
     if (type == "*") 12L else 6L
-  } else {
-    # clamp precision to: [0, 20] for fixed, [1, 21] for precision
-    fmt_types_dplp <- c("g", "G", "e", "E", "r")
-    max(0L, min(20L, spec$precision)) + (out$type %in% fmt_types_dblp)
   }
   # If zero fill is specified, padding goes after sign and before digits.
   if (zero) {

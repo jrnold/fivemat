@@ -8,6 +8,7 @@ fmt_init <- function(x) {
 
 # split x into mantissa and exponent
 fmt_decimal <- function(x, p) {
+  value <- NULL
   out <- tibble::tibble(
     value = x,
     exponent = exponent(value),
@@ -62,9 +63,9 @@ fmt_nan <- function(x, locale) {
 
 fmt_pad_zero <- function(x, width = NULL) {
   if (is.null(width)) {
-    lens <- rowsums(cbind(str_length(string),
-                          str_length(left),
-                          str_length(right)))
+    lens <- rowSums(cbind(str_length(x$string),
+                          str_length(x$prefix),
+                          str_length(x$postfix)))
     width <- max(lens)
   }
   x$string <- str_pad(x$string, width = width, side = "left", pad = "0")
@@ -112,7 +113,9 @@ fmt_init_chr <- function(x, locale) {
   out
 }
 
+#' @importFrom purrr map2_chr
 fmt_rounded <- function(x, p, locale) {
+  p <- min(max(1L, p), 21L)
   out <- fmt_init_dbl(x, p, locale, fixed = FALSE)
   value <- out$value[out$not_na]
   k <- -exponent(value) + p - 1L
@@ -121,7 +124,8 @@ fmt_rounded <- function(x, p, locale) {
   out
 }
 
-fmt_init_si <- function(x, p, si_prefix = NULL) {
+fmt_init_si <- function(x, p, locale, si_prefix = NULL) {
+  p <- min(max(0L, p), 20L)
   if (is.null(si_prefix)) {
     si_prefix <- exponent(x)
   }
@@ -132,9 +136,9 @@ fmt_init_si <- function(x, p, si_prefix = NULL) {
 }
 
 #' Format Types
-fmt_type <- list()
+fmt_types <- list()
 
-fmt_type[["b"]] <- function(x, locale) {
+fmt_types[["b"]] <- function(x, locale) {
   out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     int2bin(abs(out[["value"]][out[["not_na"]]]))
@@ -142,6 +146,7 @@ fmt_type[["b"]] <- function(x, locale) {
 }
 
 fmt_type_e <- function(x, p, locale, capitalize = FALSE) {
+  p <- min(max(1L, p), 21L)
   out <- fmt_init_dbl(x, p, locale, fixed = FALSE)
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
                if (capitalize) "e" else "E")
@@ -150,24 +155,24 @@ fmt_type_e <- function(x, p, locale, capitalize = FALSE) {
   out
 }
 
-fmt_type[["e"]] <- function(x, spec, locale) {
+fmt_types[["e"]] <- function(x, spec, locale) {
   fmt_type_e(x, spec$precision, locale, capitalize = FALSE)
 }
 
-fmt_type[["E"]] <- function(x, spec, locale) {
+fmt_types[["E"]] <- function(x, spec, locale) {
   fmt_type_e(x, spec$precision, locale, capitalize = TRUE)
 }
 
-fmt_type[["d"]] <- function(x, spec, locale) {
+fmt_types[["d"]] <- function(x, spec, locale) {
   out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     str_c(sprintf("%d", abs(out[["value"]][out[["not_na"]]])))
   out
 }
 
-fmt_type[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_init_dbl(x, spec$precision, locale, fixed = TRUE)
-  p <- spec$precision
+fmt_types[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
+  p <- min(max(0L, spec$precision), 20L)
+  out <- fmt_init_dbl(x, p, locale, fixed = TRUE)
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p), "f")
   out[["string"]][out[["not_na"]]] <-
     sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
@@ -175,8 +180,8 @@ fmt_type[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
 }
 
 fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
+  p <- min(max(1L, spec$precision), 21L)
   out <- fmt_init_dbl(x, spec$precision, locale, fixed = TRUE)
-  p <- spec$precision
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
                if (capitalize) "g" else "G")
   fin <- out[["not_na"]]
@@ -184,28 +189,28 @@ fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
   out
 }
 
-fmt_type[["g"]] <- function(x, spec, locale) {
+fmt_types[["g"]] <- function(x, spec, locale) {
   fmt_type_g(x, spec, locale, capitalize = FALSE)
 }
 
-fmt_type[["G"]] <- function(x, spec, locale) {
+fmt_types[["G"]] <- function(x, spec, locale) {
   fmt_type_g(x, spec, locale, capitalize = TRUE)
 }
 
-fmt_type[["o"]] <- function(x, spec, locale, capitalize = FALSE) {
+fmt_types[["o"]] <- function(x, spec, locale, capitalize = FALSE) {
   out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     sprintf("%o", abs(out[["value"]][out[["not_na"]]]))
   out
 }
 
-fmt_type[["p"]] <- function(x, spec, locale) {
+fmt_types[["p"]] <- function(x, spec, locale) {
   out <- fmt_rounded(x, spec$precision, locale)
   out[["postfix"]] <- str_c(spec$percent_mark, out[["postfix"]])
   out
 }
 
-fmt_type[["r"]] <- function(x, spec, locale) {
+fmt_types[["r"]] <- function(x, spec, locale) {
   fmt_rounded(x, spec$precision, locale)
 }
 
@@ -217,16 +222,16 @@ fmt_type_x <- function(x, spec, locale, capitalize = FALSE) {
   out
 }
 
-fmt_type[["x"]] <- function(x, spec, locale) {
+fmt_types[["x"]] <- function(x, spec, locale) {
   fmt_type_x(x, spec, locale, capitalize = FALSE)
 }
 
-fmt_type[["X"]] <- function(x, spec, locale) {
+fmt_types[["X"]] <- function(x, spec, locale) {
   fmt_type_x(x, spec, locale, capitalize = TRUE)
 }
 
-fmt_type[["%"]] <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_type[["f"]](x * 100)
+fmt_types[["%"]] <- function(x, spec, locale, capitalize = FALSE) {
+  out <- fmt_types[["f"]](x * 100)
   out[["postfix"]] <- str_c(spec$percent_mark, out[["postfix"]])
   out
 }
@@ -317,7 +322,8 @@ fmt_pad <- function(x, spec, locale) {
     width <- max(lens)
   }
   if (align == "=") {
-    str_c(prefix, str_pad(str_c(x$string, x$postfix),
+    str_c(x$prefix,
+          str_pad(str_c(x$string, x$postfix),
                         width = width - str_length(x$prefix),
                         pad = fill))
   } else {
@@ -331,7 +337,6 @@ fmt_pad <- function(x, spec, locale) {
 }
 
 
-
 format_x <- function(x, spec, locale) {
   # initial formatting
   out <- fmt_types[[spec$type]](x, spec, locale)
@@ -341,7 +346,7 @@ format_x <- function(x, spec, locale) {
   # process negative (-)
   out <- fmt_negative(out, spec, locale)
   # zero padding
-  out <- fmt_zero(x, spec, locale)
+  out <- fmt_pad_zero(x, spec$width)
   # grouping
   out <- fmt_group(out, spec, locale)
   # alignment and padding
