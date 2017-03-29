@@ -7,12 +7,14 @@
 \usage{
 as_fmt_spec(x = character())
 
-fmt_spec(fill = " ", align = c(">", "<", "^", "="), sign = c("-", "+",
-  "(", " "), symbol = NULL, zero = FALSE, width = NULL, comma = FALSE,
-  precision = NULL, type = NULL)
+fmt_spec(type = "*", fill = " ", align = c(">", "<", "^", "="),
+  sign = c("-", "+", "(", " "), symbol = NULL, zero = FALSE,
+  width = NULL, comma = FALSE, precision = NULL)
 }
 \arguments{
 \item{x}{A string representation of the spec. See Details.}
+
+\item{type}{A character vector of length one. See Details.}
 
 \item{fill}{A string. See Details.}
 
@@ -29,8 +31,6 @@ fmt_spec(fill = " ", align = c(">", "<", "^", "="), sign = c("-", "+",
 \item{comma}{An logical vector of length one. See Details.}
 
 \item{precision}{An integer vector of length one. See Details.}
-
-\item{type}{A character vector of length one. See Details.}
 }
 \value{
 An object of class \code{"fmt_spec"}. This is a list with elements:

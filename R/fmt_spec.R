@@ -10,8 +10,7 @@ fmt_decimal <- function(x, p) {
                  exponent = as.integer(split[, 2]))
 }
 
-#' @importFrom stringi stri_dup
-#' @importFrom dplyr case_when
+#' @importFrom purrr map2_chr
 #' @noRd
 fmt_rounded <- function(x, p) {
   if (is_empty(x)) return(character())
@@ -96,39 +95,6 @@ fmt_g <- function(x, p, upper = FALSE) {
           sprintf_("f")(x, p - k - 1L))
 }
 
-# integer types
-fmt_types_int <- c("b", "d", "o", "x", "X")
-fmt_types_dblf <- c("%", "f", "F", "s")
-fmt_types_dblp <- c("a", "A", "e", "E", "g", "G", "r")
-fmt_types_chr <- c("c")
-# Derived types
-# s -> transform by SI, f
-# p,% -> transform by % then f or e
-# uses both significant digits and decimal
-# g not derived since formatting is conditional
-
-fmt_types <- list(
-  "%" = function(x, p) sprintf_("f")(x * 100, p),
-  # a and A are from R sprintf
-  "a" = function(x, p) str_sub(sprintf_("a")(x, p), 3),
-  "A" = function(x, p) str_sub(sprintf_("A")(x, p), 3),
-  "b" = function(x, p) map_chr(round(x), int2bin),
-  "c" = function(x, p) as.character(x),
-  "d" = function(x, p) sprintf("%d", as.integer(round(x))),
-  "e" = sprintf_("e"),
-  "E" = sprintf_("E"),
-  "f" = sprintf_("f"),
-  "g" = function(x, p) fmt_g(x, p, FALSE),
-  "G" = function(x, p) fmt_g(x, p, TRUE),
-  "o" = function(x, p) sprintf_("o")(as.integer(round(x))),
-  "p" = function(x, p) fmt_rounded(x * 100, p),
-  "r" = function(x, p) fmt_rounded(x, p),
-  "s" = function(x, p) fmt_prefix_auto(x, p),
-  "u" = function(x, p) intToUtf8(round(x), multiple = TRUE),
-  "X" = function(x, p) sprintf_("X")(as.integer(round(x))),
-  "x" = function(x, p) sprintf_("x")(as.integer(round(x)))
-)
-
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
 #' @importFrom stringr regex
 RE <- regex(str_c("^",
@@ -172,14 +138,6 @@ as_fmt_spec <- function(x = character()) {
   res$type <- if (is.na(m[9])) NULL else m[9]
   purrr::invoke(fmt_spec, res)
 }
-
-Format <- R6Class("Format", {
-  public = list(
-    format = function(x, spec) {
-      base::format(x)
-    }
-  )
-})
 
 #' Format Specification
 #'
@@ -325,6 +283,7 @@ fmt_spec <- function(type = "*",
     if (type == "*") 12L else 6L
   } else {
     # clamp precision to: [0, 20] for fixed, [1, 21] for precision
+    fmt_types_dplp <- c("g", "G", "e", "E", "r")
     max(0L, min(20L, spec$precision)) + (out$type %in% fmt_types_dblp)
   }
   # If zero fill is specified, padding goes after sign and before digits.
