@@ -4,7 +4,7 @@
 \name{fmt_type}
 \alias{fmt_type}
 \title{Format Types}
-\format{An object of class \code{list} of length 12.}
+\format{An object of class \code{list} of length 13.}
 \usage{
 fmt_type
 }

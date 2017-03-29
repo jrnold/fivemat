@@ -6,6 +6,44 @@ fmt_init <- function(x) {
          string = "")
 }
 
+# split x into mantissa and exponent
+fmt_decimal <- function(x, p) {
+  out <- tibble::tibble(
+    value = x,
+    exponent = exponent(value),
+    mantissa = as.integer(round(value * 10 ^ (-exponent - 1 + p)))
+  )
+  out
+}
+
+
+#' @importFrom stringr str_sub str_length str_c
+#' @importFrom stringi stri_reverse
+#' @importFrom purrr keep map_chr is_empty
+#' @noRd
+fmt_group <- function(x, grouping = NULL, sep = ",") {
+  if (is_empty(grouping)) {
+    return(x)
+  }
+  if (is_empty(x)) {
+    return(character())
+  }
+  # split integer from digits or exponent
+  # use ?= so that the splitting part is kept
+  split_pattern <- "(?=\\.|[eE][+-])"
+  x_split <- str_split_fixed(x, split_pattern, 2L)
+  intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
+  start <- cumsum(c(1L, intvls[-length(intvls)]))
+  end <- start + intvls - 1L
+  f <- function(x, start, end) {
+    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
+    res <- stri_reverse(str_c(res, collapse = sep))
+    res
+  }
+  str_c(map_chr(x_split[ , 1], f, start = start, end = end),
+        x_split[ , 2])
+}
+
 fmt_inf <- function(x, locale) {
   x[["string"]][x[["is_inf"]]] <- locale$inf_mark
   x
@@ -16,9 +54,28 @@ fmt_na <- function(x, locale) {
   x
 }
 
+
 fmt_nan <- function(x, locale) {
   x[["string"]][x[["is_nan"]]] <- locale$nan_mark
   x
+}
+
+fmt_pad_zero <- function(x, width = NULL) {
+  if (is.null(width)) {
+    lens <- rowsums(cbind(str_length(string),
+                          str_length(left),
+                          str_length(right)))
+    width <- max(lens)
+  }
+  x$string <- str_pad(x$string, width = width, side = "left", pad = "0")
+  x
+}
+
+fmt_init <- function(x) {
+  tibble(value = x,
+         left = "",
+         right = "",
+         center = "")
 }
 
 fmt_init_int <- function(x, locale) {
@@ -31,7 +88,7 @@ fmt_init_int <- function(x, locale) {
   out
 }
 
-fmt_init_dbl <- function(x, locale, fixed = FALSE) {
+fmt_init_dbl <- function(x, p, locale, fixed = FALSE) {
   out <- fmt_init(x)
   # by rounding before formatting, numbers rounede to 0 will
   # be formatted correctly without minus signs.
@@ -55,9 +112,21 @@ fmt_init_chr <- function(x, locale) {
   out
 }
 
-fmt_init_si <- function(x, si_prefix) {
+fmt_rounded <- function(x, p, locale) {
+  out <- fmt_init_dbl(x, p, locale, fixed = FALSE)
+  value <- out$value[out$not_na]
+  k <- -exponent(value) + p - 1L
+  f <- function(i, j) sprintf(str_c("%.", j, "f"), i)
+  out$string[out$not_na] <- map2_chr(value, k, f)
+  out
+}
+
+fmt_init_si <- function(x, p, si_prefix = NULL) {
+  if (is.null(si_prefix)) {
+    si_prefix <- exponent(x)
+  }
   prefix <- si_prefix(si_prefix)
-  out <- fmt_init_dbl(x / 10 ^ prefix)
+  out <- fmt_init_dbl(x / 10 ^ prefix, p, locale, fixed = TRUE)
   out[["postfix"]] <- names(si_prefix)
   out
 }
@@ -66,14 +135,14 @@ fmt_init_si <- function(x, si_prefix) {
 fmt_type <- list()
 
 fmt_type[["b"]] <- function(x, locale) {
-  out <- fmt_init_int(x)
+  out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     int2bin(abs(out[["value"]][out[["not_na"]]]))
   out
 }
 
 fmt_type_e <- function(x, p, locale, capitalize = FALSE) {
-  out <- fmt_init_dbl(x)
+  out <- fmt_init_dbl(x, p, locale, fixed = FALSE)
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
                if (capitalize) "e" else "E")
   out[["string"]][out[["not_na"]]] <-
@@ -90,14 +159,14 @@ fmt_type[["E"]] <- function(x, spec, locale) {
 }
 
 fmt_type[["d"]] <- function(x, spec, locale) {
-  out <- fmt_init_int(x)
+  out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     str_c(sprintf("%d", abs(out[["value"]][out[["not_na"]]])))
   out
 }
 
 fmt_type[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_init_dbl(x)
+  out <- fmt_init_dbl(x, spec$precision, locale, fixed = TRUE)
   p <- spec$precision
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p), "f")
   out[["string"]][out[["not_na"]]] <-
@@ -106,14 +175,15 @@ fmt_type[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
 }
 
 fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_init_dbl(x)
+  out <- fmt_init_dbl(x, spec$precision, locale, fixed = TRUE)
   p <- spec$precision
   pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
                if (capitalize) "g" else "G")
-  out[["string"]][out[["not_na"]]] <-
-    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  fin <- out[["not_na"]]
+  out[["string"]][fin] <- sprintf(pat, abs(out[["value"]][fin]))
   out
 }
+
 fmt_type[["g"]] <- function(x, spec, locale) {
   fmt_type_g(x, spec, locale, capitalize = FALSE)
 }
@@ -123,16 +193,20 @@ fmt_type[["G"]] <- function(x, spec, locale) {
 }
 
 fmt_type[["o"]] <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_init_int(x)
+  out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     sprintf("%o", abs(out[["value"]][out[["not_na"]]]))
   out
 }
 
 fmt_type[["p"]] <- function(x, spec, locale) {
-  out <- fmt_type[["r"]](x * 100)
+  out <- fmt_rounded(x, spec$precision, locale)
   out[["postfix"]] <- str_c(spec$percent_mark, out[["postfix"]])
   out
+}
+
+fmt_type[["r"]] <- function(x, spec, locale) {
+  fmt_rounded(x, spec$precision, locale)
 }
 
 fmt_type_x <- function(x, spec, locale, capitalize = FALSE) {

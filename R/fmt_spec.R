@@ -1,73 +1,3 @@
-# split x into mantissa and exponent
-fmt_decimal <- function(x, p) {
-  if (is_empty(x)) return(character())
-  # need to handle NA, NaN, Inf
-  strx <- character(length(x))
-  strx[is.finite(x)] <- sprintf(paste0("%.", p - 1L, "e"),
-                                abs(x[is.finite(x)]), p - 1L)
-  split <- stringr::str_split_fixed(strx, "e", 2)
-  tibble::tibble(mantissa = str_replace(split[, 1], "[^0-9]", ""),
-                 exponent = as.integer(split[, 2]))
-}
-
-#' @importFrom purrr map2_chr
-#' @noRd
-fmt_rounded <- function(x, p) {
-  if (is_empty(x)) return(character())
-  x <- signif(x, p)
-  k <- -exponent(x) + p - 1L
-  f <- function(i, j) sprintf(str_c("%.", j, "f"), i)
-  map2_chr(x, k, f)
-}
-
-# like precision, but drops insignificant trailing 0's
-fmt_default <- function(x, ...) {
-  UseMethod("fmt_default")
-}
-
-fmt_default.numeric <- function(x, p, ...) {
-  sprintf_("g")(x, p)
-}
-
-fmt_default.integer <- function(x, ...) {
-  sprintf_("d")(x)
-}
-
-#' @importFrom stringi stri_dup
-#' @importFrom dplyr case_when
-#' @noRd
-fmt_prefix_auto <- function(x, p) {
-  fin <- is.finite(x)
-  out <- vector("character", length(x))
-  out[!fin] <- format(x[!fin])
-  d <- fmt_decimal(x[fin], p)
-  prefix_exponent <- si_prefix(as.integer(d[["exponent"]]))
-  i <- d[["exponent"]] - prefix_exponent + 1L # nolint
-  n <- str_length(d$mantissa) # nolint
-  out[fin] <-
-    case_when(
-      i == n ~ d$mantissa,
-      i > n  ~ str_c(d$mantissa, stri_dup("0", i - n)),
-      i > 0L ~ str_c(str_sub(d$mantissa, 1L, i), ".",
-                     str_sub(d$mantissa, i + 1L)),
-      TRUE   ~ str_c("0.", stri_dup("0", -i),
-                     fmt_decimal(x[fin], pmax(0L, p + i - 1L))$mantissa)
-    )
-  attr(out, "si_prefix") <- names(prefix_exponent)
-  out
-}
-
-sprintf_ <- function(format) {
-  force(format)
-  function(x, p = NULL) {
-    if (is.null(p)) {
-      sprintf(paste0("%", format), x)
-    } else {
-      sprintf(paste0("%.", p, format), x)
-    }
-  }
-}
-
 # integer to binary
 # @param x single integer value
 # @return binary representation as character string of abs(x)
@@ -85,14 +15,6 @@ int2bin <- function(x) {
   }
   out[!is_zero] <- map2(x[!is_zero], k, f)
   out
-}
-
-fmt_g <- function(x, p, upper = FALSE) {
-  x <- signif(x, p)
-  k <- exponent(x)
-  if_else(k < -4 | k >= p,
-          sprintf_(if (upper) "E" else "e")(x, p - 1L),
-          sprintf_("f")(x, p - k - 1L))
 }
 
 # [[fill]align][sign][symbol][0][width][,][.precision][type]
