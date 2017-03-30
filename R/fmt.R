@@ -17,34 +17,6 @@ fmt_decimal <- function(x, p) {
   out
 }
 
-
-#' @importFrom stringr str_sub str_length str_c
-#' @importFrom stringi stri_reverse
-#' @importFrom purrr keep map_chr is_empty
-#' @noRd
-fmt_group <- function(x, grouping = NULL, sep = ",") {
-  if (is_empty(grouping)) {
-    return(x)
-  }
-  if (is_empty(x)) {
-    return(character())
-  }
-  # split integer from digits or exponent
-  # use ?= so that the splitting part is kept
-  split_pattern <- "(?=\\.|[eE][+-])"
-  x_split <- str_split_fixed(x, split_pattern, 2L)
-  intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
-  start <- cumsum(c(1L, intvls[-length(intvls)]))
-  end <- start + intvls - 1L
-  f <- function(x, start, end) {
-    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
-    res <- stri_reverse(str_c(res, collapse = sep))
-    res
-  }
-  str_c(map_chr(x_split[ , 1], f, start = start, end = end),
-        x_split[ , 2])
-}
-
 fmt_inf <- function(x, locale) {
   x[["string"]][x[["is_inf"]]] <- locale$inf_mark
   x
@@ -61,28 +33,33 @@ fmt_nan <- function(x, locale) {
   x
 }
 
-fmt_pad_zero <- function(x, width = NULL) {
-  if (is.null(width)) {
-    lens <- rowSums(cbind(str_length(x$string),
-                          str_length(x$prefix),
-                          str_length(x$postfix)))
-    width <- max(lens)
-  }
-  x$string <- str_pad(x$string, width = width, side = "left", pad = "0")
-  x
+fmt_pad_zero <- function(x, spec, locale) {
+  if (spec$align == "=" && spec$fill == "0") {
+    width <- spec$width
+    fin <- x$not_na
+    if (is.null(width)) {
+      lens <- rowSums(cbind(str_length(x$string[fin]),
+                            str_length(x$prefix[fin]),
+                            str_length(x$postfix[fin])))
+      width <- max(lens)
+    }
+    x$string[fin] <- str_pad(x$string[fin], width = width, side = "left",
+                             pad = "0")
+    x
+  } else x
 }
 
 fmt_init <- function(x) {
   tibble(value = x,
-         left = "",
-         right = "",
-         center = "")
+         string = "",
+         prefix = "",
+         postfix = "")
 }
 
 fmt_init_int <- function(x, locale) {
   out <- fmt_init(x)
   out[["value"]] <- as.integer(x)
-  out[["not_na"]] <- !is.finite(out[["value"]])
+  out[["not_na"]] <- !is.na(out[["value"]])
   out[["na"]] <- is.na(out[["value"]])
   out[["negative"]] <- !out[["na"]] & out[["value"]] < 0
   out <- fmt_na(out, locale)
@@ -255,7 +232,7 @@ fmt_symbols <- list(
 )
 
 fmt_negative <- function(x, spec, locale) {
-  minus <- spec$minus
+  minus <- spec$sign
   if (minus == "-") {
     x[["prefix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], "-", ""))
   } else if (minus == "+") {
@@ -274,7 +251,9 @@ fmt_negative <- function(x, spec, locale) {
 #' @importFrom stringi stri_reverse
 #' @importFrom purrr keep map_chr is_empty
 #' @noRd
-fmt_group <- function(x, grouping = NULL, sep = ",") {
+fmt_group <- function(x, spec, locale) {
+  grouping <- spec$grouping
+  sep <- locale$grouping_mark
   if (is_empty(grouping)) {
     return(x)
   }
@@ -328,31 +307,12 @@ fmt_pad <- function(x, spec, locale) {
                         pad = fill))
   } else {
     side <- switch(align,
-                   "<" = "postfix",
+                   "<" = "left",
                    "^" = "both",
-                   ">" = "prefix")
+                   ">" = "right")
     str_pad(str_c(x$prefix, x$string, x$postfix), width = width,
             side = side, pad = fill)
   }
-}
-
-
-format_x <- function(x, spec, locale) {
-  # initial formatting
-  out <- fmt_types[[spec$type]](x, spec, locale)
-  # process symbols
-  out <- fmt_symbols[["$"]](out, spec, locale)
-  out <- fmt_symbols[["#"]](out, spec, locale)
-  # process negative (-)
-  out <- fmt_negative(out, spec, locale)
-  # zero padding
-  out <- fmt_pad_zero(x, spec$width)
-  # grouping
-  out <- fmt_group(out, spec, locale)
-  # alignment and padding
-  out <- fmt_pad(out, spec, locale)
-  # any cleanup?
-  out
 }
 
 
@@ -426,6 +386,22 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
            call. = FALSE)
     }
   }
+  f <- function(x) {
+    # initial formatting
+    out <- fmt_types[[spec$type]](x, spec, locale)
+    # process symbols
+    out <- fmt_symbols[["$"]](out, spec, locale)
+    out <- fmt_symbols[["#"]](out, spec, locale)
+    # process negative (-)
+    out <- fmt_negative(out, spec, locale)
+    # zero padding
+    out <- fmt_pad_zero(out, spec, locale)
+    # grouping
+    out <- fmt_group(out, spec, locale)
+    # alignment and padding - output to string
+    fmt_pad(out, spec, locale)
+  }
+  structure(f, class = c("fmt", "function"))
 }
 
 # nocov start
