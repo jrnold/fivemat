@@ -227,6 +227,7 @@ fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
   out
 }
 
+
 #' Format numbers
 #'
 #' The function \code{fmt_new} creates a function to format numbers using
