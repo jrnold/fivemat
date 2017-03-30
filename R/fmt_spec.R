@@ -1,14 +1,3 @@
-sprintf_ <- function(format) {
-  force(format)
-  function(x, p = NULL) {
-    if (is.null(p)) {
-      sprintf(paste0("%", format), x)
-    } else {
-      sprintf(paste0("%.", p, format), x)
-    }
-  }
-}
-
 # integer to binary
 # @param x single integer value
 # @return binary representation as character string of abs(x)
@@ -216,6 +205,7 @@ fmt_spec <- function(type = "*",
     if (type == "*") 12L else 6L
   } else {
     # clamp precision to: [0, 20] for fixed, [1, 21] for precision
+    fmt_types_dplp <- c("g", "G", "e", "E", "r")
     max(0L, min(20L, spec$precision)) + (out$type %in% fmt_types_dblp)
   }
   # If zero fill is specified, padding goes after sign and before digits.
