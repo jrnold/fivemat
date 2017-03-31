@@ -196,13 +196,15 @@ fmt_spec <- function(type = "*",
     res$type <- "G"
   } else if (type == "i") {
     res$type <- "d"
-  } else if (!type %in% names(fmt_types)) {
+  } else if (!type %in% c(names(fmt_types), "*")) {
     stop("Type `\"", type, "\" is not recognized.", call. = FALSE)
   }
-  precision <- if (is.null(precision)) {
+  res$precision <- if (is.null(precision)) {
     # defaults from d3-format
     # perhaps use 4 instead as in R
     if (type == "*") 12L else 6L
+  } else {
+    precision
   }
   # If zero fill is specified, padding goes after sign and before digits.
   if (zero) {

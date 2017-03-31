@@ -86,12 +86,8 @@ test_that("fmt_new(\"#[width]x\") considers the prefix", {
 })
 
 test_that("fmt_new(x) works with special values", {
-  expect_equal(fmt_new("x")(c(Inf, -Inf, NA, NaN)),
-               c("Inf", "-Inf", "NA", "NaN"))
-  expect_equal(fmt_new("#x")(c(Inf, -Inf, NA, NaN)),
-               c("Inf", "-Inf", "NA", "NaN"))
-  expect_equal(fmt_new("X")(c(Inf, -Inf, NA, NaN)),
-               c("Inf", "-Inf", "NA", "NaN"))
-  expect_equal(fmt_new("#x")(c(Inf, -Inf, NA, NaN)),
-               c("Inf", "-Inf", "NA", "NaN"))
+  expect_equal(fmt_new("x")(NA), "NA")
+  expect_equal(fmt_new("#x")(NA), "NA")
+  expect_equal(fmt_new("X")(NA), "NA")
+  expect_equal(fmt_new("#X")(NA), "NA")
 })

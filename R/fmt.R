@@ -18,18 +18,24 @@ fmt_decimal <- function(x, p) {
 }
 
 fmt_inf <- function(x, locale) {
-  x[["string"]][x[["is_inf"]]] <- locale$inf_mark
+  if (any(x[["inf"]])) {
+    x[["string"]][x[["inf"]]] <- locale$inf_mark
+  }
   x
 }
 
 fmt_na <- function(x, locale) {
-  x[["string"]][x[["is_na"]]] <- locale$na_mark
+  if (any(x[["na"]])) {
+    x[["string"]][x[["na"]]] <- locale$na_mark
+  }
   x
 }
 
 
 fmt_nan <- function(x, locale) {
-  x[["string"]][x[["is_nan"]]] <- locale$nan_mark
+  if (any(x[["nan"]])) {
+    x[["string"]][x[["nan"]]] <- locale$nan_mark
+  }
   x
 }
 
@@ -42,6 +48,8 @@ fmt_pad_zero <- function(x, spec, locale) {
                             str_length(x$prefix[fin]),
                             str_length(x$postfix[fin])))
       width <- max(lens)
+    } else {
+      width <- width - str_length(x$prefix[fin]) - str_length(x$postfix[fin])
     }
     x$string[fin] <- str_pad(x$string[fin], width = width, side = "left",
                              pad = "0")
@@ -72,8 +80,8 @@ fmt_init_dbl <- function(x, p, locale, fixed = FALSE) {
   # be formatted correctly without minus signs.
   f <- if (fixed) base::round else base::signif
   out[["value"]] <- f(as.numeric(x), p)
-  out[["not_na"]] <- !is.finite(out[["value"]])
-  out[["nan"]] <- is.nan(out[["nan"]])
+  out[["not_na"]] <- is.finite(out[["value"]])
+  out[["nan"]] <- is.nan(out[["value"]])
   out[["na"]] <- is.na(out[["value"]]) & !out[["nan"]]
   out[["inf"]] <- is.infinite(out[["value"]])
   out[["negative"]] <- !out[["na"]] & !out[["nan"]] & out[["value"]] < 0
@@ -115,7 +123,7 @@ fmt_init_si <- function(x, p, locale, si_prefix = NULL) {
 #' Format Types
 fmt_types <- list()
 
-fmt_types[["b"]] <- function(x, locale) {
+fmt_types[["b"]] <- function(x, spec, locale) {
   out <- fmt_init_int(x, locale)
   out[["string"]][out[["not_na"]]] <-
     int2bin(abs(out[["value"]][out[["not_na"]]]))
@@ -123,10 +131,10 @@ fmt_types[["b"]] <- function(x, locale) {
 }
 
 fmt_type_e <- function(x, p, locale, capitalize = FALSE) {
-  p <- min(max(1L, p), 21L)
+  p <- min(max(0L, p), 21L)
   out <- fmt_init_dbl(x, p, locale, fixed = FALSE)
-  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
-               if (capitalize) "e" else "E")
+  pat <- str_c("%", if (is.null(p)) "" else str_c(".", p),
+               if (capitalize) "E" else "e")
   out[["string"]][out[["not_na"]]] <-
     sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
   out
@@ -142,25 +150,25 @@ fmt_types[["E"]] <- function(x, spec, locale) {
 
 fmt_types[["d"]] <- function(x, spec, locale) {
   out <- fmt_init_int(x, locale)
-  out[["string"]][out[["not_na"]]] <-
-    str_c(sprintf("%d", abs(out[["value"]][out[["not_na"]]])))
+  fin <- out[["not_na"]]
+  out[["string"]][fin] <- sprintf("%d", abs(out[["value"]][fin]))
   out
 }
 
 fmt_types[["f"]] <- function(x, spec, locale, capitalize = FALSE) {
   p <- min(max(0L, spec$precision), 20L)
   out <- fmt_init_dbl(x, p, locale, fixed = TRUE)
-  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p), "f")
-  out[["string"]][out[["not_na"]]] <-
-    sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
+  pat <- str_c("%", if (is.null(p)) "" else str_c(".", p), "f")
+  fin <- out[["not_na"]]
+  out[["string"]][fin] <- sprintf(pat, abs(out[["value"]][fin]))
   out
 }
 
 fmt_type_g <- function(x, spec, locale, capitalize = FALSE) {
-  p <- min(max(1L, spec$precision), 21L)
+  p <- min(max(0L, spec$precision), 21L)
   out <- fmt_init_dbl(x, spec$precision, locale, fixed = TRUE)
-  pat <- str_c("%", if (!is.null(p)) "" else str_c(".", p),
-               if (capitalize) "g" else "G")
+  pat <- str_c("%", if (is.null(p)) "" else str_c(".", p),
+               if (capitalize) "G" else "g")
   fin <- out[["not_na"]]
   out[["string"]][fin] <- sprintf(pat, abs(out[["value"]][fin]))
   out
@@ -176,8 +184,8 @@ fmt_types[["G"]] <- function(x, spec, locale) {
 
 fmt_types[["o"]] <- function(x, spec, locale, capitalize = FALSE) {
   out <- fmt_init_int(x, locale)
-  out[["string"]][out[["not_na"]]] <-
-    sprintf("%o", abs(out[["value"]][out[["not_na"]]]))
+  fin <- out[["not_na"]]
+  out[["string"]][fin] <- sprintf("%o", abs(out[["value"]][fin]))
   out
 }
 
@@ -192,7 +200,7 @@ fmt_types[["r"]] <- function(x, spec, locale) {
 }
 
 fmt_type_x <- function(x, spec, locale, capitalize = FALSE) {
-  out <- fmt_init_int(x)
+  out <- fmt_init_int(x, locale)
   pat <- str_c("%", if (capitalize) "x" else "X")
   out[["string"]][out[["not_na"]]] <-
     sprintf(pat, abs(out[["value"]][out[["not_na"]]]))
@@ -226,7 +234,7 @@ fmt_symbols <- list(
   },
   "$" = function(x, spec, locale) {
     x[["prefix"]] <- str_c(locale[["currency"]][1], x[["prefix"]])
-    x[["prefix"]] <- str_c(locale[["currency"]][2], x[["postfix"]])
+    x[["postfix"]] <- str_c(x[["postfix"]], locale[["currency"]][2])
     x
   }
 )
@@ -234,14 +242,14 @@ fmt_symbols <- list(
 fmt_negative <- function(x, spec, locale) {
   minus <- spec$sign
   if (minus == "-") {
-    x[["prefix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], "-", ""))
+    x[["prefix"]] <- str_c(if_else(x[["negative"]], "-", ""), x[["prefix"]])
   } else if (minus == "+") {
-    x[["prefix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], "-", "+"))
+    x[["prefix"]] <- str_c(if_else(x[["negative"]], "-", "+"), x[["prefix"]])
   } else if (minus == " ") {
-    x[["prefix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], "-", " "))
+    x[["prefix"]] <- str_c(if_else(x[["negative"]], "-", " "), x[["prefix"]])
   } else if (minus == "(") {
-    x[["prefix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], "(", ""))
-    x[["postfix"]] <- str_c(x[["prefix"]], if_else(x[["negative"]], ")", ""))
+    x[["prefix"]] <- str_c(if_else(x[["negative"]], "(", ""), x[["prefix"]])
+    x[["postfix"]] <- str_c(x[["postfix"]], if_else(x[["negative"]], ")", ""))
   }
   x
 }
@@ -252,7 +260,7 @@ fmt_negative <- function(x, spec, locale) {
 #' @importFrom purrr keep map_chr is_empty
 #' @noRd
 fmt_group <- function(x, spec, locale) {
-  grouping <- spec$grouping
+  grouping <- locale$grouping
   sep <- locale$grouping_mark
   if (is_empty(grouping)) {
     return(x)
@@ -287,19 +295,20 @@ trunc_zeros <- function(x, width = NULL) {
 }
 
 fmt_pad <- function(x, spec, locale) {
+  if (is.null(spec$align) || (spec$fill == "0" && spec$align == "=") ||
+      is.null(spec$width)) {
+      return(str_c(x$prefix, x$string, x$postfix))
+  }
   align <- spec$align
   fill <- spec$fill
-  if (is.null(spec$align) || (spec$fill == "0" && spec$align == "=")) {
-    return(x)
-  }
   width <- spec$width
   # null width uses longest string
-  if (is.null(width)) {
-    lens <- rowSums(cbind(str_length(x$string),
-                          str_length(x$prefix),
-                          str_length(x$postfix)))
-    width <- max(lens)
-  }
+  # if (is.null(width)) {
+  #   lens <- rowSums(cbind(str_length(x$string),
+  #                         str_length(x$prefix),
+  #                         str_length(x$postfix)))
+  #   width <- max(lens)
+  # }
   if (align == "=") {
     str_c(x$prefix,
           str_pad(str_c(x$string, x$postfix),
@@ -307,9 +316,9 @@ fmt_pad <- function(x, spec, locale) {
                         pad = fill))
   } else {
     side <- switch(align,
-                   "<" = "left",
+                   "<" = "right",
                    "^" = "both",
-                   ">" = "right")
+                   ">" = "left")
     str_pad(str_c(x$prefix, x$string, x$postfix), width = width,
             side = side, pad = fill)
   }
@@ -390,16 +399,25 @@ fmt_new <- function(spec = NULL, locale = NULL, si_prefix = NULL) {
     # initial formatting
     out <- fmt_types[[spec$type]](x, spec, locale)
     # process symbols
-    out <- fmt_symbols[["$"]](out, spec, locale)
-    out <- fmt_symbols[["#"]](out, spec, locale)
+    if ("$" %in% spec$symbol) {
+      out <- fmt_symbols[["$"]](out, spec, locale)
+    }
+    if ("#" %in% spec$symbol) {
+      out <- fmt_symbols[["#"]](out, spec, locale)
+    }
     # process negative (-)
     out <- fmt_negative(out, spec, locale)
     # zero padding
     out <- fmt_pad_zero(out, spec, locale)
     # grouping
-    out <- fmt_group(out, spec, locale)
+    if (spec$comma) {
+      out[["string"]][out[["not_na"]]] <-
+        fmt_group(out[["string"]][out[["not_na"]]], spec, locale)
+    }
     # alignment and padding - output to string
-    fmt_pad(out, spec, locale)
+    out <- fmt_pad(out, spec, locale)
+    # replace numerals
+    replace_numerals(out, numerals = locale$numerals)
   }
   structure(f, class = c("fmt", "function"))
 }
