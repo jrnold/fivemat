@@ -1,5 +1,18 @@
+# split number into integer, decimal, and exponent parts
+#' @importFrom tibble tibble
+#' @importFrom stringr str_match_all
+split_number <- function(x) {
+  pattern <- "([-+]?[0-9]*)?(?:\\.([0-9]*))?(?:[eE]([+-][0-9]+))?"
+  xsplit <- str_match_all(x, pattern)
+  tibble(
+    integer = as.integer(xsplit[ , 2]),
+    decimal = as.integer(xsplit[ , 3]),
+    exponent = if_else(is.na(xsplit[ , 4]), 0, as.integer(xsplit[ , 4]))
+  )
+}
+
 # split x into mantissa and exponent
-fmt_decimal <- function(x, p) {
+mantissa <- function(x, p) {
   value <- NULL
   out <- tibble(
     value = x,
@@ -7,10 +20,6 @@ fmt_decimal <- function(x, p) {
     mantissa = as.integer(round(value * 10 ^ (-exponent - 1 + p)))
   )
   out
-}
-
-pad_zero <- function(x, spec, locale) {
-
 }
 
 #' @importFrom purrr map2_chr
@@ -31,19 +40,6 @@ fmt_rounded <- function(x, p) {
 #   out[["postfix"]] <- names(si_prefix)
 #   out
 # }
-
-# split number into integer, decimal, and exponent parts
-#' @importFrom tibble tibble
-#' @importFrom stringr str_match_all
-split_number <- function(x) {
-  pattern <- "([-+]?[0-9]*)?(?:\\.([0-9]*))?(?:[eE]([+-][0-9]+))?"
-  xsplit <- str_match_all(x, pattern)
-  tibble(
-    integer = as.integer(xsplit[ , 2]),
-    decimal = as.integer(xsplit[ , 3]),
-    exponent = if_else(is.na(xsplit[ , 4]), 0, as.integer(xsplit[ , 4]))
-  )
-}
 
 #' @importFrom stringr str_sub str_length str_c str_split_fixed
 #' @importFrom stringi stri_reverse
@@ -155,6 +151,7 @@ Formatter <- R6Class("Formatter",
       if (self$spec$comma) {
         out <- self$group(out)
       }
+      out <- self$numerals(out)
       out <- self$pad(out)
       out <- self$postprocess(out)
       out
@@ -257,20 +254,26 @@ Formatter <- R6Class("Formatter",
         str_c(map_chr(x_split[ , 1], f, start = start, end = end), x_split[ , 2])
       x
     },
+    numerals = function(x) {
+      if (!is.null(self$spec$numerals)) {
+        x$string <- str_replace_all(x$string, self$locale$numerals)
+      }
+      x
+    },
     pad = function(x) {
       align <- self$spec$align
       fill <- self$spec$fill
       width <- self$spec$width
-      if (is.null(align) || is.null(width)) {
+      if (is.null(align)) {
         return(str_c(x$prefix, x$string, x$postfix))
       }
       # null width uses longest string
-      # if (is.null(width)) {
-      #   lens <- rowSums(cbind(str_length(x$string),
-      #                         str_length(x$prefix),
-      #                         str_length(x$postfix)))
-      #   width <- max(lens)
-      # }
+      if (is.null(width)) {
+        lens <- rowSums(cbind(str_length(x$string),
+                              str_length(x$prefix),
+                              str_length(x$postfix)))
+        width <- max(lens)
+      }
       if (align == "=") {
         str_c(x$prefix,
               str_pad(str_c(x$string, x$postfix),

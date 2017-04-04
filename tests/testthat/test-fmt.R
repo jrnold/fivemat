@@ -1,21 +1,21 @@
 context("fmt_new")
 
 test_that("fmt returns a function", {
-  expect_is(fmt_new("d"), "function")
-  expect_is(fmt_new("d"), "fmt")
+  expect_is(fmt_new("d"), "FormatterType_d")
+  expect_is(fmt_new("d"), "R6")
 })
 
 test_that("fmt_new(spec)(number) returns a string", {
-  expect_is(fmt_new("d")(0), "character")
+  expect_is(fmt_new("d")$render(0), "character")
 })
 
 test_that("fmt_new(spec)(x) works with a list", {
-  expect_equal(fmt_new(list(type = "f", precision = 2))(c(1.234, 123)),
+  expect_equal(fmt_new(list(type = "f", precision = 2))$render(c(1.234, 123)),
                c("1.23", "123.00"))
 })
 
 test_that("fmt_new(spec)(x) throws error with bad spec", {
-  expect_error(fmt_new(123), regexp = "Class .* for `spec` is not supported")
+  expect_error(fmt_new(123)$render, regexp = "Class .* for `spec` is not supported")
 })
 
 test_that("fmt_new(spec) throws an error for invalid formats", {
@@ -26,8 +26,8 @@ test_that("fmt_new(spec) throws an error for invalid formats", {
 
 test_that(paste("fmt_new(\",.\") unreasonable precision values are clamped ",
                 "to reasonable values"), {
-  expect_equal(fmt_new(".30f")(0), "0.00000000000000000000")
-  expect_equal(fmt_new(".0g")(1), "1")
+  expect_equal(fmt_new(".30f")$render(0), "0.00000000000000000000")
+  expect_equal(fmt_new(".0g")$render(1), "1")
 })
 
 #test_that("fmt_new(\"s\") handles very small and very large values", {

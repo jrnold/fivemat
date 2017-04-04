@@ -46,7 +46,7 @@ as_fmt_spec <- function(x = character()) {
   }
   res <- list()
   res$fill <- na_else(m[1], " ")
-  res$align <- na_else(m[2], ">")
+  res$align <- if (is.na(m[2])) NULL else m[2]
   res$sign <- na_else(m[3], "-")
   res$symbol <- if (is.na(m[4])) NULL else m[4]
   res$zero <- !is.na(m[5])
@@ -165,7 +165,7 @@ as_fmt_spec <- function(x = character()) {
 #' @importFrom assertthat is.flag is.number
 fmt_spec <- function(type = "*",
                      fill = " ",
-                     align = c(">", "<", "^", "="),
+                     align = NULL,
                      sign = c("-", "+", "(", " "),
                      symbol = NULL,
                      zero = FALSE,
@@ -173,7 +173,9 @@ fmt_spec <- function(type = "*",
                      comma = FALSE,
                      precision = NULL) {
   assert_that(is.string(fill))
-  align <- match.arg(align)
+  if (!is.null(align)) {
+    assert_that(align %in% c(">", "<", "^", "="))
+  }
   sign <- match.arg(sign)
   if (!is.null(symbol)) {
     assert_that(is.string(symbol) && (symbol %in% c("$", "#")))
@@ -202,7 +204,7 @@ fmt_spec <- function(type = "*",
   res$precision <- if (is.null(precision)) {
     # defaults from d3-format
     # perhaps use 4 instead as in R
-    if (type == "*") 12L else 6L
+    4L
   } else {
     precision
   }
