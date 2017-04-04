@@ -10,21 +10,7 @@ fmt_decimal <- function(x, p) {
 }
 
 pad_zero <- function(x, spec, locale) {
-  if (spec$align == "=" && spec$fill == "0") {
-    width <- spec$width
-    fin <- x$not_na
-    if (is.null(width)) {
-      lens <- rowSums(cbind(str_length(x$string[fin]),
-                            str_length(x$prefix[fin]),
-                            str_length(x$postfix[fin])))
-      width <- max(lens)
-    } else {
-      width <- width - str_length(x$prefix[fin]) - str_length(x$postfix[fin])
-    }
-    x$string[fin] <- str_pad(x$string[fin], width = width, side = "left",
-                             pad = "0")
-    x
-  } else x
+
 }
 
 #' @importFrom purrr map2_chr
@@ -213,7 +199,18 @@ Formatter <- R6Class("Formatter",
       x
     },
     format_zero = function(x) {
-      x$value[x$is_value] <- pad_zero(x$value[x$is_value], self$spec, self$locale)
+      width <- self$spec$width
+      fin <- x$is_value
+      if (is.null(width)) {
+        lens <- rowSums(cbind(str_length(x$string[fin]),
+                              str_length(x$prefix[fin]),
+                              str_length(x$postfix[fin])))
+        width <- max(lens)
+      } else {
+        width <- width - str_length(x$prefix[fin]) - str_length(x$postfix[fin])
+      }
+      x$string[fin] <- str_pad(x$string[fin], width = width, side = "left",
+                               pad = "0")
       x
     },
     format_minus = function(x) {
@@ -241,13 +238,13 @@ Formatter <- R6Class("Formatter",
     group = function(x) {
       grouping <- self$locale$grouping
       sep <- self$locale$grouping_mark
-      if (is_empty(grouping) || len(x) == 0) {
+      if (is_empty(grouping) || nrow(x) == 0) {
         return(x)
       }
       # split integer from digits or exponent
       # use ?= so that the splitting part is kept
       split_pattern <- "(?=\\.|[eE][+-])"
-      x_split <- str_split_fixed(x$string, split_pattern, 2L)
+      x_split <- str_split_fixed(x$string[x$is_value], split_pattern, 2L)
       intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
       start <- cumsum(c(1L, intvls[-length(intvls)]))
       end <- start + intvls - 1L
@@ -256,8 +253,8 @@ Formatter <- R6Class("Formatter",
         res <- stri_reverse(str_c(res, collapse = sep))
         res
       }
-      x$string <- str_c(map_chr(x_split[ , 1], f, start = start, end = end),
-                        x_split[ , 2])
+      x$string[x$is_value] <-
+        str_c(map_chr(x_split[ , 1], f, start = start, end = end), x_split[ , 2])
       x
     },
     pad = function(x) {
@@ -328,6 +325,32 @@ FormatterChr <- R6Class("FormatterChr",
 #' Format Types
 fmt_types <- new.env()
 
+FormatterType_a <-
+  R6Class("FormatterType_a",
+          inherit = FormatterDblSignif,
+          public = list(
+            format_pound = function(x) {
+              x$prefix[x$is_value] <- "0x"
+              x
+            },
+            format_values = function(x) sprintf("%a", x)
+          ))
+
+fmt_types$a <- FormatterType_a
+
+FormatterType_A <-
+  R6Class("FormatterType_A",
+          inherit = FormatterDblSignif,
+          public = list(
+            format_pound = function(x) {
+              x$prefix[x$is_value] <- "0x"
+              x
+            },
+            format_values = function(x) sprintf("%A", x)
+          ))
+
+fmt_types$A <- FormatterType_A
+
 FormatterType_b <- R6Class("FormatterType_b",
   inherit = FormatterInt,
   public = list(
@@ -336,8 +359,8 @@ FormatterType_b <- R6Class("FormatterType_b",
       x$prefix[x$is_value] <- "0b"
       x
     }
-  )
-)
+  ))
+
 
 fmt_types$b <- FormatterType_b
 
@@ -418,7 +441,7 @@ FormatterType_g <-
     )
   )
 
-fmt_types$f <- FormatterType_g
+fmt_types$g <- FormatterType_g
 
 FormatterType_G <-
   R6Class("FormatterType_G",

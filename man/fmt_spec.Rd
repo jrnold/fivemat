@@ -115,7 +115,7 @@ The available \code{type} values are:
 \item{\code{"r"}:  Decimal notation, but rounded to significant digits.}
 \item{\code{"s"}:  Decimal notation (\code{"f"}) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
 \item{\code{"u"}: Integer values converted to its unicode character.}
-\item{\code{"\%"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
+\item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 \item{\code{"x"}, \code{"X"}: Hexadecimal notation, rounded to integer. \code{"x"} uses lower-case letters, and \code{"X"}, upper-case letters.}
 }
 

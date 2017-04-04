@@ -27,7 +27,7 @@ RE <- regex(str_c("^",
                   "(\\d+)?",           # width
                   "(,)?",              # comma
                   "(\\.\\d+)?",        # precision
-                  "([a-z%])?",         # type
+                  "([a-z])?",         # type
                   "$"), ignore_case = TRUE)
 
 #' @rdname fmt_spec
@@ -154,7 +154,7 @@ as_fmt_spec <- function(x = character()) {
 #' \item{\code{"r"}:  Decimal notation, but rounded to significant digits.}
 #' \item{\code{"s"}:  Decimal notation (\code{"f"}) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
 #' \item{\code{"u"}: Integer values converted to its unicode character.}
-#' \item{\code{"\%"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
+#' \item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 #' \item{\code{"x"}, \code{"X"}: Hexadecimal notation, rounded to integer. \code{"x"} uses lower-case letters, and \code{"X"}, upper-case letters.}
 #' }
 #'
@@ -215,6 +215,7 @@ format.fmt_spec <- function(x, ...) {
                   x$align,
                   x$sign,
                   x$symbol,
+                  if (x$zero) "0" else "",
                   if (is.null(x$width)) "" else max(1, x$width),
                   if (x$comma) "," else "",
                   if (is.null(x$precision)) ""
