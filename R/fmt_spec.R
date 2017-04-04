@@ -185,7 +185,7 @@ fmt_spec <- function(type = "*",
   assert_that(is.null(type) || is.string(type))
 
   res <- list(fill = fill, align = align, sign = sign,
-              symbol = symbol, width = width,
+              symbol = symbol, zero = zero, width = width,
               comma = comma, precision = precision, type = type)
   # The "n" type is an alias for ",g".
   if (res$type == "n") {
@@ -205,11 +205,6 @@ fmt_spec <- function(type = "*",
     if (type == "*") 12L else 6L
   } else {
     precision
-  }
-  # If zero fill is specified, padding goes after sign and before digits.
-  if (zero) {
-    res$fill <- "0"
-    res$align <- "="
   }
   structure(res, class = "fmt_spec")
 }
