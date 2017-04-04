@@ -15,7 +15,7 @@ test_that(paste("fmt_locale(currency= c(prefix, suffix))",
                        spec = "$06.2f")$render(2), "\u0e3f02.00")
   expect_equal(fmt_new(locale = fmt_locale(decimal_mark = ".",
                                            currency = c("", "\u0e3f")),
-                       spec = "$06.2f")$renderp(2), "02.00\u0e3f")
+                       spec = "$06.2f")$render(2), "02.00\u0e3f")
 })
 
 test_that(paste("fmt_locale(grouping = null) does",

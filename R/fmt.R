@@ -1,14 +1,17 @@
 # split number into integer, decimal, and exponent parts
 #' @importFrom tibble tibble
 #' @importFrom stringr str_match_all
-split_number <- function(x) {
-  pattern <- "([-+]?[0-9]*)?(?:\\.([0-9]*))?(?:[eE]([+-][0-9]+))?"
-  xsplit <- str_match_all(x, pattern)
-  tibble(
-    integer = as.integer(xsplit[ , 2]),
-    decimal = as.integer(xsplit[ , 3]),
-    exponent = if_else(is.na(xsplit[ , 4]), 0, as.integer(xsplit[ , 4]))
-  )
+parse_number <- function(x, fill_na = TRUE) {
+  pattern <- "([-+])?([0-9]+)?(?:(\\.)([0-9]*))?(?:([eE])([+-])([0-9]+))?"
+  out <- str_match(x, pattern)[ , -1L, drop = FALSE]
+  colnames(out) <- c("sign", "integer",
+                     "decimal_point", "decimal",
+                     "exponent_mark", "exponent_sign", "exponent")
+  out <- as_tibble(out)
+  if (fill_na) {
+    out <- mutate_all(out, funs(if_else(is.na(.), "", .)))
+  }
+  out
 }
 
 # split x into mantissa and exponent
@@ -41,34 +44,6 @@ fmt_rounded <- function(x, p) {
 #   out
 # }
 
-#' @importFrom stringr str_sub str_length str_c str_split_fixed
-#' @importFrom stringi stri_reverse
-#' @importFrom purrr keep map_chr is_empty
-#' @noRd
-fmt_group <- function(x, spec, locale) {
-  grouping <- locale$grouping
-  sep <- locale$grouping_mark
-  if (is_empty(grouping)) {
-    return(x)
-  }
-  if (is_empty(x)) {
-    return(character())
-  }
-  # split integer from digits or exponent
-  # use ?= so that the splitting part is kept
-  split_pattern <- "(?=\\.|[eE][+-])"
-  x_split <- str_split_fixed(x, split_pattern, 2L)
-  intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
-  start <- cumsum(c(1L, intvls[-length(intvls)]))
-  end <- start + intvls - 1L
-  f <- function(x, start, end) {
-    res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
-    res <- stri_reverse(str_c(res, collapse = sep))
-    res
-  }
-  str_c(map_chr(x_split[ , 1], f, start = start, end = end),
-        x_split[ , 2])
-}
 
 # Truncate leading zeros
 trunc_zeros <- function(x, width = NULL) {
@@ -148,10 +123,7 @@ Formatter <- R6Class("Formatter",
       if (self$spec$zero) {
         out <- self$format_zero(out)
       }
-      if (self$spec$comma) {
-        out <- self$group(out)
-      }
-      out <- self$numerals(out)
+      out <- self$group(out)
       out <- self$pad(out)
       out <- self$postprocess(out)
       out
@@ -233,31 +205,39 @@ Formatter <- R6Class("Formatter",
       x
     },
     group = function(x) {
-      grouping <- self$locale$grouping
-      sep <- self$locale$grouping_mark
-      if (is_empty(grouping) || nrow(x) == 0) {
-        return(x)
-      }
       # split integer from digits or exponent
       # use ?= so that the splitting part is kept
-      split_pattern <- "(?=\\.|[eE][+-])"
-      x_split <- str_split_fixed(x$string[x$is_value], split_pattern, 2L)
-      intvls <- rep_len(grouping, max(str_length(x_split[, 1])))
-      start <- cumsum(c(1L, intvls[-length(intvls)]))
-      end <- start + intvls - 1L
-      f <- function(x, start, end) {
-        res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
-        res <- stri_reverse(str_c(res, collapse = sep))
-        res
+      nums <- x$is_value
+      parsed <- parse_number(x$string[nums])
+      # replace 0-9 with locale numerals
+      if (!is.null(self$locale$numerals)) {
+        parsed$integer <- str_replace_all(parsed$integer, self$locale$numerals)
+        parsed$decimal <- str_replace_all(parsed$exponent, self$locale$numerals)
+        parsed$exponent <- str_replace_all(parsed$exponent, self$locale$numerals)
       }
-      x$string[x$is_value] <-
-        str_c(map_chr(x_split[ , 1], f, start = start, end = end), x_split[ , 2])
-      x
-    },
-    numerals = function(x) {
-      if (!is.null(self$spec$numerals)) {
-        x$string <- str_replace_all(x$string, self$locale$numerals)
+      # replace decimal mark with locale
+      if (self$locale$decimal_mark != ".") {
+        parsed$decimal_point <- str_replace(parsed$decimal_point, "[.]",
+                                            self$locale$decimal_mark)
       }
+      # group integer part if comma is specified
+      grouping <- self$locale$grouping
+      if (self$spec$comma & !is_empty(grouping)) {
+        sep <- self$locale$grouping_mark
+        intvls <- rep_len(grouping, max(str_length(parsed$integer), na.rm = TRUE))
+        start <- cumsum(c(1L, intvls[-length(intvls)]))
+        end <- start + intvls - 1L
+        f <- function(x, start, end) {
+          if (is.na(x)) {
+            ""
+          } else {
+            res <- keep(str_sub(stri_reverse(x), start, end), function(s) s != "")
+            stri_reverse(str_c(res, collapse = sep))
+          }
+        }
+        parsed$integer <- map_chr(parsed$integer, f, start = start, end = end)
+      }
+      x$string[nums] <- invoke_rows(str_c, parsed, .collate = "rows")[[".out"]]
       x
     },
     pad = function(x) {
@@ -381,7 +361,8 @@ FormatterType_c <-
   R6Class("FormatterType_c",
           inherit = FormatterChr,
           public = list(
-            format_values = as.character
+            format_values = as.character,
+            group = identity
           ))
 
 fmt_types$c <- FormatterType_c
