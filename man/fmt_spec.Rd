@@ -7,9 +7,9 @@
 \usage{
 as_fmt_spec(x = character())
 
-fmt_spec(type = "*", fill = " ", align = c(">", "<", "^", "="),
-  sign = c("-", "+", "(", " "), symbol = NULL, zero = FALSE,
-  width = NULL, comma = FALSE, precision = NULL)
+fmt_spec(type = "*", fill = " ", align = NULL, sign = c("-", "+", "(",
+  " "), symbol = NULL, zero = FALSE, width = NULL, comma = FALSE,
+  precision = NULL)
 }
 \arguments{
 \item{x}{A string representation of the spec. See Details.}

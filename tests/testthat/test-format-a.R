@@ -20,6 +20,6 @@ test_that("fmt_new(\"#.2a\") works as expected", {
 
 test_that("fmt_new(\"#.2A\") works as expected", {
   expect_equal(fmt_new("#.2A")$render(c(1, 2.5, 10, 16, NA, NaN, Inf, -Inf)),
-               c("0x1.00P+0", "0x1.40P+1", "0x1.40P+3", "0x1.00P+4",
+               c("0X1.00P+0", "0X1.40P+1", "0X1.40P+3", "0X1.00P+4",
                  "NA", "NaN", "Inf", "-Inf"))
 })

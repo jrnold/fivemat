@@ -182,7 +182,14 @@ fmt_spec <- function(type = "*",
   }
   assert_that(is.flag(zero))
   assert_that(is.flag(comma))
-  assert_that(is.null(width) || is.number(width))
+  # If width is not NULL but align is NULL, then set align to a default value
+  # However, allow for a NULL width with non-NULL align
+  if (!is.null(width)) {
+    assert_that(is.number(width))
+    if (is.null(align)) {
+      align <- ">"
+    }
+  }
   assert_that(is.null(precision) || is.number(precision))
   assert_that(is.null(type) || is.string(type))
 
