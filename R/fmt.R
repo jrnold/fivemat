@@ -53,16 +53,16 @@ fmt_rounded <- function(x, p) {
   map2_chr(x, k, f)
 }
 
-# fmt_init_si <- function(x, p, locale, si_prefix = NULL) {
-#   p <- min(max(0L, p), 20L)
-#   if (is.null(si_prefix)) {
-#     si_prefix <- exponent(x)
-#   }
-#   prefix <- si_prefix(si_prefix)
-#   out <- fmt_init_dbl(x / 10 ^ prefix, p, locale, fixed = TRUE)
-#   out[["postfix"]] <- names(si_prefix)
-#   out
-# }
+get_si_prefixes <- function(x, p, locale, si_prefix = NULL) {
+  p <- min(max(0L, p), 20L)
+  if (is.null(si_prefix)) {
+    si_prefix <- exponent(x)
+  }
+  prefix <- si_prefix(si_prefix)
+  out <- fmt_init_dbl(x / 10 ^ prefix, p, locale, fixed = TRUE)
+  out[["postfix"]] <- names(si_prefix)
+  out
+}
 
 
 # Truncate leading zeros
@@ -155,23 +155,19 @@ Formatter <- R6Class("Formatter",
       n <- length(x)
       out <- tibble(string = rep("", n),
                     prefix = rep("", n),
-                    postfix = rep("", n))
+                    postfix = rep("", n),
+                    value = x)
       if (purrr::is_integer(x)) {
         out[["is_na"]] <- is.na(x)
         out[["is_value"]] <- !out$is_na
-        out[["negative"]] <- out$is_value & x < 0
-        out[["value"]] <- abs(x)
       } else if (purrr::is_double(x)) {
         out[["is_nan"]] <- is.nan(x)
         out[["is_na"]] <- is.na(x) & !out$is_nan
         out[["is_inf"]] <- is.infinite(x)
         out[["is_value"]] <- !(out$is_nan | out$is_na | out$is_inf)
-        out[["negative"]] <- (out$is_value | out$is_inf) & x < 0
-        out[["value"]] <- abs(x)
       } else if (purrr::is_character(x)) {
         out[["is_na"]] <- is.na(x)
         out[["is_value"]] <- !out$is_na
-        out[["value"]] <- x
       } else {
         stop("Don't know how to handle objects of class: ",
              str_c(class(x), collapse = ","))
@@ -186,10 +182,12 @@ Formatter <- R6Class("Formatter",
     format_pound = identity,
     format_dollar = function(x) {
       # only prefix and postfix currency if
-      x[["prefix"]] <- str_c(if_else(x[["is_value"]], self$locale[["currency"]][1], ""),
+      x[["prefix"]] <- str_c(if_else(x[["is_value"]],
+                                     self$locale[["currency"]][1], ""),
                              x[["prefix"]])
       x[["postfix"]] <- str_c(x[["postfix"]],
-                              if_else(x[["is_value"]], self$locale[["currency"]][2], ""))
+                              if_else(x[["is_value"]],
+                                      self$locale[["currency"]][2], ""))
       x
     },
     format_zero = function(x) {
@@ -208,24 +206,30 @@ Formatter <- R6Class("Formatter",
       x
     },
     format_minus = function(x) {
-      if (is.null(x$negative)) return(x)
+      if (!is.numeric(x$value)) {
+        return(x)
+      } if (is.integer(x$value)) {
+        negative <- x[["is_value"]] & x[["value"]] < 0
+      } else {
+        negative <- (x[["is_value"]] & x[["value"]] < 0) |
+          (x[["is_inf"]] & x[["value"]] < 0)
+      }
       minus <- self$spec$sign
       if (minus == "-") {
-        x[["prefix"]] <- str_c(if_else(x[["negative"]], self$locale$minus_mark, ""),
+        x[["prefix"]] <- str_c(if_else(negative, self$locale$minus_mark, ""),
                                x[["prefix"]])
       } else if (minus == "+") {
-        x[["prefix"]] <- str_c(if_else(x[["negative"]], self$locale$minus_mark,
+        x[["prefix"]] <- str_c(if_else(negative, self$locale$minus_mark,
                                        self$locale$plus_mark), x[["prefix"]])
       } else if (minus == " ") {
-        x[["prefix"]] <- str_c(if_else(x[["negative"]],
-                                       self$locale$minus_mark, " "), x[["prefix"]])
+        x[["prefix"]] <- str_c(if_else(negative, self$locale$minus_mark, " "),
+                               x[["prefix"]])
+
       } else if (minus == "(") {
-        x[["prefix"]] <- str_c(if_else(x[["negative"]],
-                                       self$locale$left_paren, ""),
+        x[["prefix"]] <- str_c(if_else(negative, self$locale$left_paren, ""),
                                x[["prefix"]])
         x[["postfix"]] <- str_c(x[["postfix"]],
-                                if_else(x[["negative"]],
-                                        self$locale$right_paren, ""))
+                                if_else(negative, self$locale$right_paren, ""))
       }
       x
     },
@@ -235,7 +239,8 @@ Formatter <- R6Class("Formatter",
       grouping <- self$locale$grouping
       if (self$spec$comma & !is_empty(grouping)) {
         isval <- x$is_value
-        x$string[isval] <- commas(x$string[isval], grouping, self$locale$grouping_mark)
+        x$string[isval] <- commas(x$string[isval], grouping,
+                                  self$locale$grouping_mark)
       }
       x
     },
@@ -288,7 +293,8 @@ FormatterDblSignif <- R6Class("FormatterDblSignif",
       if (!is.null(self$locale$numerals)) {
         parsed$integer <- str_replace_all(parsed$integer, self$locale$numerals)
         parsed$decimal <- str_replace_all(parsed$exponent, self$locale$numerals)
-        parsed$exponent <- str_replace_all(parsed$exponent, self$locale$numerals)
+        parsed$exponent <- str_replace_all(parsed$exponent,
+                                           self$locale$numerals)
       }
       # replace decimal mark with locale
       if (self$locale$decimal_mark != ".") {
@@ -298,7 +304,8 @@ FormatterDblSignif <- R6Class("FormatterDblSignif",
       # group integer part if comma is specified
       grouping <- self$locale$grouping
       if (self$spec$comma & !is_empty(grouping)) {
-        parsed$intger <- commas(parsed$integer, grouping, self$locale$grouping_mark)
+        parsed$intger <- commas(parsed$integer, grouping,
+                                self$locale$grouping_mark)
       }
       x$string[nums] <- invoke_rows(str_c, parsed, .collate = "rows")[[".out"]]
       x
@@ -344,7 +351,8 @@ FormatterType_a <-
             format_values = function(x) {
               p <- self$spec$precision
               str_replace(sprintf(str_c("%#", if (is.null(p)) ""
-                                        else str_c(".", p), "a"), x), "^0[Xx]", "")
+                                        else str_c(".", p), "a"), abs(x)),
+                          "^0[Xx]", "")
             },
             group = function(x) {
               # group all non-na values
@@ -372,7 +380,8 @@ FormatterType_A <-
             format_values = function(x) {
               p <- self$spec$precision
               str_replace(sprintf(str_c("%#", if (is.null(p)) ""
-                                        else str_c(".", p), "A"), x), "^0[Xx]", "")
+                                        else str_c(".", p), "A"), abs(x)),
+                          "^0[Xx]", "")
             }
           ))
 
@@ -381,7 +390,7 @@ fmt_types$A <- FormatterType_A
 FormatterType_b <- R6Class("FormatterType_b",
   inherit = FormatterInt,
   public = list(
-    format_values = function(x) int2bin(x),
+    format_values = function(x) int2bin(abs(x)),
     format_pound = function(x) {
       x$prefix[x$is_value] <- "0b"
       x
@@ -396,7 +405,7 @@ FormatterType_u <-
           inherit = FormatterInt,
           public = list(
             format_na = function() "",
-            format_values = function(x) intToUtf8(x, multiple = TRUE)
+            format_values = function(x) intToUtf8(abs(x), multiple = TRUE)
           ))
 
 fmt_types$u <- FormatterType_u
@@ -427,7 +436,7 @@ FormatterType_e <- R6Class("FormatterType_e",
   public = list(
     format_values = function(x) {
       p <- min(max(0L, self$spec$precision), 21L)
-      sprintf(str_c("%", if (is.null(p)) "" else str_c(".", p), "e"), x)
+      sprintf(str_c("%", if (is.null(p)) "" else str_c(".", p), "e"), abs(x))
     }
   )
 )
@@ -438,7 +447,7 @@ FormatterType_E <- R6Class("FormatterType_E",
   public = list(
    format_values = function(x) {
      p <- min(max(0L, self$spec$precision), 21L)
-     sprintf(str_c("%", if (is.null(p)) "" else str_c(".", p), "E"), x)
+     sprintf(str_c("%", if (is.null(p)) "" else str_c(".", p), "E"), abs(x))
    }
   )
 )
@@ -456,6 +465,21 @@ FormatterType_f <- R6Class("FormatterType_f",
 )
 
 fmt_types$f <- FormatterType_f
+
+FormatterType_s <- R6Class("FormatterType_s",
+   inherit = Formatter,
+   public = list(
+     preprocess = identity,
+     format_values = function(x) {
+       p <- min(max(0L, self$spec$precision), 20L)
+       prefix <- self$spec$subtype
+       pattern <- str_c("%", if (is.null(p)) "" else str_c(".", p), "f")
+       sprintf(pattern, abs(x))
+     }
+   )
+)
+
+fmt_types$s <- FormatterType_s
 
 FormatterType_g <-
   R6Class("FormatterType_g",
@@ -572,14 +596,6 @@ FormatterType_X <-
           ))
 
 fmt_types$X <- FormatterType_X
-
-#
-# fmt_types[["%"]] <- function(x, spec, locale, capitalize = FALSE) {
-#   out <- fmt_types[["f"]](x * 100)
-#   out[["postfix"]] <- str_c(spec$percent_mark, out[["postfix"]])
-#   out
-# }
-
 
 
 #' Format numbers

@@ -27,8 +27,8 @@ RE <- regex(str_c("^",
                   "(\\d+)?",           # width
                   "(,)?",              # comma
                   "(\\.\\d+)?",        # precision
-                  "([a-z])?",         # type
-                  "$"), ignore_case = TRUE)
+                  "(?:([a-zA-z])(.*))",      # type
+                  "$"))
 
 #' @rdname fmt_spec
 #' @importFrom assertthat is.string
@@ -58,6 +58,7 @@ as_fmt_spec <- function(x = character()) {
     as.integer(str_sub(m[8], 2))
   }
   res$type <- if (is.na(m[9])) NULL else m[9]
+  res$subtype <- if (is.na(m[10])) NULL else m[10]
   purrr::invoke(fmt_spec, res)
 }
 
@@ -78,6 +79,7 @@ as_fmt_spec <- function(x = character()) {
 #' @param comma An logical vector of length one. See Details.
 #' @param precision An integer vector of length one. See Details.
 #' @param type A character vector of length one. See Details.
+#' @param si_prefix A character vector, integer, or number.
 #' @return An object of class \code{"fmt_spec"}. This is a list with elements:
 #' \describe{
 #' \item{fill}{Character vector of length one. See Details.}
@@ -151,10 +153,10 @@ as_fmt_spec <- function(x = character()) {
 #' \item{\code{"n"}: Shorthand for \code{",g"}.}
 #' \item{\code{"o"}: Integer values in octal notation.}
 #' \item{\code{"p"}: Multiplied by 100, rounded to significant digits, and then formatted with \code{"f"} and a percent sign (\code{"\%"}) suffix.}
+#' \item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 #' \item{\code{"r"}:  Decimal notation, but rounded to significant digits.}
 #' \item{\code{"s"}:  Decimal notation (\code{"f"}) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
 #' \item{\code{"u"}: Integer values converted to its unicode character.}
-#' \item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 #' \item{\code{"x"}, \code{"X"}: Hexadecimal notation, rounded to integer. \code{"x"} uses lower-case letters, and \code{"X"}, upper-case letters.}
 #' }
 #'
@@ -171,7 +173,9 @@ fmt_spec <- function(type = "*",
                      zero = FALSE,
                      width = NULL,
                      comma = FALSE,
-                     precision = NULL) {
+                     precision = NULL,
+                     si_prefix = NULL,
+                     subtype = NULL) {
   assert_that(is.string(fill))
   if (!is.null(align)) {
     assert_that(align %in% c(">", "<", "^", "="))
@@ -229,7 +233,8 @@ format.fmt_spec <- function(x, ...) {
                   if (x$comma) "," else "",
                   if (is.null(x$precision)) ""
                   else str_c(".", max(0, x$precision)),
-                  if (is.null(x$type)) "" else x$type)
+                  if (is.null(x$type)) "" else x$type,
+                  if (is.null(x$subtype)) "" else x$subtype)
 }
 
 #' @export
