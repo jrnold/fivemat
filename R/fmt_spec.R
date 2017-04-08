@@ -27,7 +27,7 @@ RE <- regex(str_c("^",
                   "(\\d+)?",           # width
                   "(,)?",              # comma
                   "(\\.\\d+)?",        # precision
-                  "(?:([a-zA-z])(.*))",      # type
+                  "(?:([a-zA-z])(.*))",   # type
                   "$"))
 
 #' @rdname fmt_spec
@@ -196,10 +196,17 @@ fmt_spec <- function(type = "*",
   }
   assert_that(is.null(precision) || is.number(precision))
   assert_that(is.null(type) || is.string(type))
+  assert_that(is.null(si_prefix) || length(si_prefix) == 1L)
+  if (!is.null(si_prefix)) {
+    subtype <- names(si_prefix(si_prefix))
+  }
+  assert_that(is.null(subtype) || is.string(subtype))
 
-  res <- list(fill = fill, align = align, sign = sign,
+  res <- list(type = type,
+              subtype = subtype,
+              fill = fill, align = align, sign = sign,
               symbol = symbol, zero = zero, width = width,
-              comma = comma, precision = precision, type = type)
+              comma = comma, precision = precision)
   # The "n" type is an alias for ",g".
   if (res$type == "n") {
     res$comma <- TRUE
@@ -215,7 +222,7 @@ fmt_spec <- function(type = "*",
   res$precision <- if (is.null(precision)) {
     # defaults from d3-format
     # perhaps use 4 instead as in R
-    4L
+    6L
   } else {
     precision
   }

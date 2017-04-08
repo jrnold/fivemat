@@ -9,7 +9,7 @@ as_fmt_spec(x = character())
 
 fmt_spec(type = "*", fill = " ", align = NULL, sign = c("-", "+", "(",
   " "), symbol = NULL, zero = FALSE, width = NULL, comma = FALSE,
-  precision = NULL)
+  precision = NULL, si_prefix = NULL, subtype = NULL)
 }
 \arguments{
 \item{x}{A string representation of the spec. See Details.}
@@ -31,6 +31,8 @@ fmt_spec(type = "*", fill = " ", align = NULL, sign = c("-", "+", "(",
 \item{comma}{An logical vector of length one. See Details.}
 
 \item{precision}{An integer vector of length one. See Details.}
+
+\item{si_prefix}{A character vector, integer, or number.}
 }
 \value{
 An object of class \code{"fmt_spec"}. This is a list with elements:
@@ -112,10 +114,10 @@ The available \code{type} values are:
 \item{\code{"n"}: Shorthand for \code{",g"}.}
 \item{\code{"o"}: Integer values in octal notation.}
 \item{\code{"p"}: Multiplied by 100, rounded to significant digits, and then formatted with \code{"f"} and a percent sign (\code{"\%"}) suffix.}
+\item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 \item{\code{"r"}:  Decimal notation, but rounded to significant digits.}
 \item{\code{"s"}:  Decimal notation (\code{"f"}) with an [SI prefix](#locale_formatPrefix), rounded to significant digits.}
 \item{\code{"u"}: Integer values converted to its unicode character.}
-\item{\code{"P"}: Multiplied by 100, and then formatted with decimal notation (\code{"f"}) and a percent sign (\code{"\%"}) suffix.}
 \item{\code{"x"}, \code{"X"}: Hexadecimal notation, rounded to integer. \code{"x"} uses lower-case letters, and \code{"X"}, upper-case letters.}
 }
 

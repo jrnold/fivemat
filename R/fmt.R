@@ -53,16 +53,6 @@ fmt_rounded <- function(x, p) {
   map2_chr(x, k, f)
 }
 
-get_si_prefixes <- function(x, p, locale, si_prefix = NULL) {
-  p <- min(max(0L, p), 20L)
-  if (is.null(si_prefix)) {
-    si_prefix <- exponent(x)
-  }
-  prefix <- si_prefix(si_prefix)
-  out <- fmt_init_dbl(x / 10 ^ prefix, p, locale, fixed = TRUE)
-  out[["postfix"]] <- names(si_prefix)
-  out
-}
 
 
 # Truncate leading zeros
@@ -208,7 +198,7 @@ Formatter <- R6Class("Formatter",
     format_minus = function(x) {
       if (!is.numeric(x$value)) {
         return(x)
-      } if (is.integer(x$value)) {
+      } else if (is.integer(x$value)) {
         negative <- x[["is_value"]] & x[["value"]] < 0
       } else {
         negative <- (x[["is_value"]] & x[["value"]] < 0) |
@@ -277,7 +267,7 @@ Formatter <- R6Class("Formatter",
 )
 
 
-
+#' @importFrom purrr invoke_rows
 FormatterDblSignif <- R6Class("FormatterDblSignif",
   inherit = Formatter,
   public = list(
@@ -469,15 +459,31 @@ fmt_types$f <- FormatterType_f
 FormatterType_s <- R6Class("FormatterType_s",
    inherit = Formatter,
    public = list(
-     preprocess = identity,
-     format_values = function(x) {
+     preprocess = as.numeric,
+     setup = function(x) {
+       out = super$setup(x)
        p <- min(max(0L, self$spec$precision), 20L)
-       prefix <- self$spec$subtype
-       pattern <- str_c("%", if (is.null(p)) "" else str_c(".", p), "f")
-       sprintf(pattern, abs(x))
-     }
-   )
-)
+       # singe SI prefix this alters both string and postfix, it needs to
+       # work on both
+       if (any(out[["is_value"]])) {
+         vals <- out[["value"]][out[["is_value"]]]
+         if (is.null(self$spec$subtype)) {
+           si_prefix <- exponent(x)
+         } else {
+           si_prefix <- self$spec$substype
+         }
+         vals <- signif(vals / 10 ^ si_prefix, p)
+         out$prefix[out$is_value] <-
+           c(out$postfix, names(si_prefix))
+         out$string[out$is_value] <-
+           fmt_rounded(abs(vals), self$spec$precision)
+       }
+       out
+     },
+     format_values = identity
+   ))
+
+
 
 fmt_types$s <- FormatterType_s
 
@@ -514,7 +520,7 @@ FormatterType_o <-
           inherit = FormatterInt,
           public = list(
             format_values = function(x) {
-              sprintf("%o", x)
+              sprintf("%o", abs(x))
             },
             format_pound = function(x) {
               x$prefix[x$is_value] <- "0o"
@@ -550,7 +556,7 @@ FormatterType_P <-
               out
             },
             preprocess = function(x) {
-              super$preprocess(as.numeric(x) * 100)
+              super$preprocess(as.numeric(abs(x)) * 100)
             }
           ))
 
@@ -561,7 +567,7 @@ FormatterType_r <-
         inherit = FormatterDblSignif,
         public = list(
           format_values = function(x) {
-            fmt_rounded(x, self$spec$precision)
+            fmt_rounded(abs(x), self$spec$precision)
           }
         ))
 
@@ -572,7 +578,7 @@ FormatterType_x <-
           inherit = FormatterInt,
           public = list(
             format_values = function(x) {
-              sprintf("%x", x)
+              sprintf("%x", abs(x))
             },
             format_pound = function(x) {
               x$prefix[x$is_value] <- "0x"
@@ -587,7 +593,7 @@ FormatterType_X <-
           inherit = FormatterInt,
           public = list(
             format_values = function(x) {
-              sprintf("%X", x)
+              sprintf("%X", abs(x))
             },
             format_pound = function(x) {
               x$prefix[x$is_value] <- "0x"

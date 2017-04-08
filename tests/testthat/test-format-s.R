@@ -2,7 +2,7 @@ context("format s")
 
 test_that(paste("fmt_new(\"s\") outputs SI-prefix notation with",
                 "default precision 6"), {
-  f <- fmt_new("s")
+  f <- fmt_new("s")$render
   expect_equal(f(0), "0.00000")
   expect_equal(f(1), "1.00000")
   expect_equal(f(10), "10.0000")
